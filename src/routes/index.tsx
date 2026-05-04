@@ -40,17 +40,14 @@ function Index() {
       <section className="relative overflow-hidden">
         <div className="container mx-auto px-4 lg:px-8 pt-12 pb-20">
           <div className="text-center mb-10">
-            <p className="text-sm tracking-[0.3em] text-muted-foreground uppercase mb-3">
-              Edition One · 2026 Campaign
-            </p>
             <h1 className="font-display text-5xl md:text-7xl font-bold tracking-tight">
               <span className="text-gradient">Welcome to Glammee</span>
             </h1>
           </div>
 
           {/* Carousel-style fanned image gallery */}
-          <div className="relative h-[420px] md:h-[560px] flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center justify-center gap-2 md:gap-4">
+          <div className="relative h-[520px] md:h-[720px] flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center gap-3 md:gap-6">
               {heroImages.map((img, i) => {
                 const center = i === 2;
                 return (
@@ -58,10 +55,10 @@ function Index() {
                     key={i}
                     className={`relative rounded-2xl overflow-hidden shadow-elegant transition-smooth hover:scale-105 hover:-translate-y-3 ${img.offset} ${
                       center
-                        ? "w-44 md:w-72 h-72 md:h-[480px] z-20"
+                        ? "w-56 md:w-96 h-96 md:h-[640px] z-20"
                         : i === 1 || i === 3
-                          ? "w-36 md:w-56 h-60 md:h-[400px] z-10"
-                          : "w-28 md:w-44 h-48 md:h-[320px]"
+                          ? "w-44 md:w-72 h-72 md:h-[520px] z-10"
+                          : "w-32 md:w-56 h-56 md:h-[420px]"
                     }`}
                   >
                     <img

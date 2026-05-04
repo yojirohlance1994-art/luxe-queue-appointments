@@ -32,9 +32,18 @@ export function BookingDialog({
     contact_number: "",
     email: "",
     service_id: "",
+    stylist: "",
     preferred_at: "",
     notes: "",
   });
+
+  const stylists = [
+    { name: "Ava Romero", expertise: "Precision cuts & balayage", available: true },
+    { name: "Liam Tanaka", expertise: "Color correction & highlights", available: true },
+    { name: "Sofia Mendes", expertise: "Gel manicures & nail art", available: false },
+    { name: "Noa Bautista", expertise: "Lash extensions & brow shaping", available: true },
+    { name: "Mateo Cruz", expertise: "Bridal & event makeup", available: false },
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -77,7 +86,7 @@ export function BookingDialog({
         client_id: client.id,
         service_id: form.service_id,
         preferred_at: new Date(form.preferred_at).toISOString(),
-        notes: form.notes || null,
+        notes: [form.stylist ? `Stylist: ${form.stylist}` : null, form.notes].filter(Boolean).join(" — ") || null,
       });
       if (aErr) throw aErr;
 
@@ -85,7 +94,7 @@ export function BookingDialog({
         description: "We'll be in touch shortly to confirm your slot.",
       });
       onOpenChange(false);
-      setForm({ full_name: "", contact_number: "", email: "", service_id: "", preferred_at: "", notes: "" });
+      setForm({ full_name: "", contact_number: "", email: "", service_id: "", stylist: "", preferred_at: "", notes: "" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       toast.error(message);
@@ -142,6 +151,27 @@ export function BookingDialog({
                 {services.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
                     {s.name} — {s.category} · ${Number(s.price).toFixed(0)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Preferred Stylist</Label>
+            <Select value={form.stylist} onValueChange={(v) => setForm({ ...form, stylist: v })}>
+              <SelectTrigger><SelectValue placeholder="Choose a stylist (optional)" /></SelectTrigger>
+              <SelectContent>
+                {stylists.map((s) => (
+                  <SelectItem key={s.name} value={s.name} disabled={!s.available}>
+                    <span className="flex items-center justify-between gap-3 w-full">
+                      <span>
+                        <span className="font-medium">{s.name}</span>
+                        <span className="text-muted-foreground"> — {s.expertise}</span>
+                      </span>
+                      <span className={`ml-2 text-xs font-semibold ${s.available ? "text-primary" : "text-destructive"}`}>
+                        {s.available ? "Available" : "Unavailable"}
+                      </span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
