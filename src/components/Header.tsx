@@ -15,33 +15,30 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-card/80 border-b border-border/40">
+      <header className="sticky top-0 z-40 bg-card border-b border-border/40">
         <div className="container mx-auto px-4 lg:px-8 flex items-center justify-between h-20">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="Glammee logo" width={48} height={48} className="h-12 w-12" />
-            <span className="font-display text-2xl md:text-3xl font-bold text-primary">
+            <span className="font-display italic text-2xl md:text-3xl font-bold text-primary">
               Glammee
             </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-10">
-            <Link to="/" className={linkClass} activeOptions={{ exact: true }} activeProps={{ className: activeClass }}>
+            <Link to="/" className="text-card-foreground hover:text-primary transition-smooth font-semibold text-lg" activeOptions={{ exact: true }} activeProps={{ className: "text-primary font-semibold text-lg" }}>
               Home
             </Link>
-            <Link to="/services" className={linkClass} activeProps={{ className: activeClass }}>
+            <Link to="/services" className="text-card-foreground hover:text-primary transition-smooth font-semibold text-lg" activeProps={{ className: "text-primary font-semibold text-lg" }}>
               Services
             </Link>
-            <Link to="/about" className={linkClass} activeProps={{ className: activeClass }}>
+            <Link to="/about" className="text-card-foreground hover:text-primary transition-smooth font-semibold text-lg" activeProps={{ className: "text-primary font-semibold text-lg" }}>
               About
             </Link>
-            <Button variant="default" onClick={() => setOpen(true)} className="bg-gradient-primary text-primary-foreground hover:opacity-90">
-              Book Now
-            </Button>
           </nav>
 
           <button
             aria-label="Toggle menu"
-            className="md:hidden text-foreground p-2"
+            className="md:hidden text-card-foreground p-2"
             onClick={() => setMenuOpen((v) => !v)}
           >
             {menuOpen ? <X /> : <Menu />}
