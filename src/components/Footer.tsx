@@ -31,7 +31,6 @@ export function Footer() {
             <li><Link to="/about" className="hover:underline">About Us</Link></li>
             <li><Link to="/services" className="hover:underline">Services</Link></li>
             <li><a href="#" className="hover:underline">Terms & Conditions</a></li>
-            <li><Link to="/admin" className="hover:underline opacity-70">Staff Login</Link></li>
           </ul>
         </div>
 
