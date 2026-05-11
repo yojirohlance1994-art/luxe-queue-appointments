@@ -25,6 +25,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [idPreview, setIdPreview] = useState<string | null>(null);
   const [idName, setIdName] = useState<string | null>(null);
+  const idVerified = typeof window !== "undefined" && localStorage.getItem("glammee_admin_id_verified") === "1";
 
   const handleIdUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,7 +43,7 @@ function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === "admin" && !idPreview) {
+    if (mode === "admin" && !idVerified && !idPreview) {
       return toast.error("Please upload a photo of your staff ID to continue.");
     }
     setLoading(true);
@@ -59,6 +60,9 @@ function LoginPage() {
     if (mode === "admin" && !isAdmin) {
       await supabase.auth.signOut();
       return toast.error("This account does not have admin access.");
+    }
+    if (mode === "admin" && isAdmin) {
+      localStorage.setItem("glammee_admin_id_verified", "1");
     }
     toast.success(`Welcome back${isAdmin ? ", admin" : ""}!`);
     navigate({ to: mode === "admin" ? "/admin" : "/" });
@@ -104,7 +108,7 @@ function LoginPage() {
           <Label>Password</Label>
           <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
-        {mode === "admin" && (
+        {mode === "admin" && !idVerified && (
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5">
               <IdCard className="h-4 w-4 text-primary" /> Staff ID Photo
@@ -135,6 +139,12 @@ function LoginPage() {
                 <input type="file" accept="image/*" className="hidden" onChange={handleIdUpload} />
               </label>
             )}
+          </div>
+        )}
+        {mode === "admin" && idVerified && (
+          <div className="flex items-center gap-2 text-xs text-primary bg-primary/5 border border-primary/30 rounded-lg p-3">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span>Staff ID already verified on this device — email and password only.</span>
           </div>
         )}
         <Button className="w-full bg-gradient-primary text-primary-foreground" type="submit" disabled={loading}>
