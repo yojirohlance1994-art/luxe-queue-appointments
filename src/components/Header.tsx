@@ -46,6 +46,20 @@ export function Header() {
               Services
             </Link>
             <Link
+              to="/team"
+              className="hidden md:inline-flex px-2 sm:px-3 py-1.5 rounded-md text-card-foreground hover:text-primary hover:bg-accent transition-smooth font-semibold text-sm sm:text-base md:text-lg"
+              activeProps={{ className: "hidden md:inline-flex px-2 sm:px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm sm:text-base md:text-lg" }}
+            >
+              Our Team
+            </Link>
+            <Link
+              to="/work"
+              className="hidden md:inline-flex px-2 sm:px-3 py-1.5 rounded-md text-card-foreground hover:text-primary hover:bg-accent transition-smooth font-semibold text-sm sm:text-base md:text-lg"
+              activeProps={{ className: "hidden md:inline-flex px-2 sm:px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm sm:text-base md:text-lg" }}
+            >
+              Our Work
+            </Link>
+            <Link
               to="/about"
               className="px-2 sm:px-3 py-1.5 rounded-md text-card-foreground hover:text-primary hover:bg-accent transition-smooth font-semibold text-sm sm:text-base md:text-lg"
               activeProps={{ className: "px-2 sm:px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm sm:text-base md:text-lg" }}
