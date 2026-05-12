@@ -14,9 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_photos: {
+        Row: {
+          appointment_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          url: string
+        }
+        Insert: {
+          appointment_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          url: string
+        }
+        Update: {
+          appointment_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_photos_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           client_id: string
+          concern: string | null
           created_at: string
           id: string
           notes: string | null
@@ -28,6 +61,7 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          concern?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -39,6 +73,7 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          concern?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -89,6 +124,42 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_items: {
+        Row: {
+          active: boolean
+          category: Database["public"]["Enums"]["service_category"]
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["service_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["service_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           active: boolean
@@ -119,6 +190,48 @@ export type Database = {
           id?: string
           name?: string
           price?: number
+        }
+        Relationships: []
+      }
+      staff: {
+        Row: {
+          active: boolean
+          bio: string | null
+          category: Database["public"]["Enums"]["service_category"]
+          created_at: string
+          full_name: string
+          id: string
+          image_url: string | null
+          role: string
+          seniority: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bio?: string | null
+          category?: Database["public"]["Enums"]["service_category"]
+          created_at?: string
+          full_name: string
+          id?: string
+          image_url?: string | null
+          role?: string
+          seniority?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bio?: string | null
+          category?: Database["public"]["Enums"]["service_category"]
+          created_at?: string
+          full_name?: string
+          id?: string
+          image_url?: string | null
+          role?: string
+          seniority?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -158,8 +271,16 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      appointment_status: "queued" | "in_progress" | "completed" | "cancelled"
-      service_category: "hair" | "nails" | "body"
+      appointment_status:
+        | "queued"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+        | "pending"
+        | "accepted"
+        | "in_service"
+        | "declined"
+      service_category: "hair" | "nails" | "body" | "beauty"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -288,8 +409,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      appointment_status: ["queued", "in_progress", "completed", "cancelled"],
-      service_category: ["hair", "nails", "body"],
+      appointment_status: [
+        "queued",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "pending",
+        "accepted",
+        "in_service",
+        "declined",
+      ],
+      service_category: ["hair", "nails", "body", "beauty"],
     },
   },
 } as const
