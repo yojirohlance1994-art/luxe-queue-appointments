@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkRouteImport } from './routes/work'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as LoginRouteImport } from './routes/login'
@@ -20,6 +22,16 @@ import { Route as AdminStaffRouteImport } from './routes/admin.staff'
 import { Route as AdminRecordsRouteImport } from './routes/admin.records'
 import { Route as AdminQueueRouteImport } from './routes/admin.queue'
 
+const WorkRoute = WorkRouteImport.update({
+  id: '/work',
+  path: '/work',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -78,6 +90,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
+  '/team': typeof TeamRoute
+  '/work': typeof WorkRoute
   '/admin/queue': typeof AdminQueueRoute
   '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -89,6 +103,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
+  '/team': typeof TeamRoute
+  '/work': typeof WorkRoute
   '/admin/queue': typeof AdminQueueRoute
   '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -102,6 +118,8 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
+  '/team': typeof TeamRoute
+  '/work': typeof WorkRoute
   '/admin/queue': typeof AdminQueueRoute
   '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -116,6 +134,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/services'
     | '/signup'
+    | '/team'
+    | '/work'
     | '/admin/queue'
     | '/admin/records'
     | '/admin/staff'
@@ -127,6 +147,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/services'
     | '/signup'
+    | '/team'
+    | '/work'
     | '/admin/queue'
     | '/admin/records'
     | '/admin/staff'
@@ -139,6 +161,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/services'
     | '/signup'
+    | '/team'
+    | '/work'
     | '/admin/queue'
     | '/admin/records'
     | '/admin/staff'
@@ -152,10 +176,26 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ServicesRoute: typeof ServicesRoute
   SignupRoute: typeof SignupRoute
+  TeamRoute: typeof TeamRoute
+  WorkRoute: typeof WorkRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/work': {
+      id: '/work'
+      path: '/work'
+      fullPath: '/work'
+      preLoaderRoute: typeof WorkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -252,6 +292,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ServicesRoute: ServicesRoute,
   SignupRoute: SignupRoute,
+  TeamRoute: TeamRoute,
+  WorkRoute: WorkRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
