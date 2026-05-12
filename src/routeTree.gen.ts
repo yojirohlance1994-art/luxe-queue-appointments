@@ -17,6 +17,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminStaffRouteImport } from './routes/admin.staff'
+import { Route as AdminRecordsRouteImport } from './routes/admin.records'
 import { Route as AdminQueueRouteImport } from './routes/admin.queue'
 
 const SignupRoute = SignupRouteImport.update({
@@ -59,6 +60,11 @@ const AdminStaffRoute = AdminStaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRecordsRoute = AdminRecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminQueueRoute = AdminQueueRouteImport.update({
   id: '/queue',
   path: '/queue',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/admin/queue': typeof AdminQueueRoute
+  '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/admin/queue': typeof AdminQueueRoute
+  '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/admin/queue': typeof AdminQueueRoute
+  '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/signup'
     | '/admin/queue'
+    | '/admin/records'
     | '/admin/staff'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/signup'
     | '/admin/queue'
+    | '/admin/records'
     | '/admin/staff'
     | '/admin'
   id:
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/signup'
     | '/admin/queue'
+    | '/admin/records'
     | '/admin/staff'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -200,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStaffRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/records': {
+      id: '/admin/records'
+      path: '/records'
+      fullPath: '/admin/records'
+      preLoaderRoute: typeof AdminRecordsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/queue': {
       id: '/admin/queue'
       path: '/queue'
@@ -212,12 +231,14 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminQueueRoute: typeof AdminQueueRoute
+  AdminRecordsRoute: typeof AdminRecordsRoute
   AdminStaffRoute: typeof AdminStaffRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminQueueRoute: AdminQueueRoute,
+  AdminRecordsRoute: AdminRecordsRoute,
   AdminStaffRoute: AdminStaffRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
