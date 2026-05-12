@@ -53,7 +53,7 @@ function QueuePage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const update = async (id: string, status: string) => {
+  const update = async (id: string, status: "accepted" | "declined" | "in_service" | "completed" | "cancelled") => {
     const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success(`Marked as ${status.replace("_", " ")}`);

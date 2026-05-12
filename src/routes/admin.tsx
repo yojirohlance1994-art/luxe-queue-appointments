@@ -31,12 +31,12 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const NAV = [
+const NAV: { to: string; label: string; icon: any; exact?: boolean }[] = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/queue", label: "Queue", icon: ListOrdered },
   { to: "/admin/staff", label: "Staff", icon: Users },
   { to: "/admin/records", label: "Records", icon: FolderOpen },
-] as const;
+];
 
 function AdminLayout() {
   const [open, setOpen] = useState(false);
