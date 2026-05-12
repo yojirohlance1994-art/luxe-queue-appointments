@@ -159,7 +159,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       appointment_status: "queued" | "in_progress" | "completed" | "cancelled"
-      service_category: "hair" | "nails" | "body"
+      service_category: "hair" | "nails" | "body" | "beauty"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -289,7 +289,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       appointment_status: ["queued", "in_progress", "completed", "cancelled"],
-      service_category: ["hair", "nails", "body"],
+      service_category: ["hair", "nails", "body", "beauty"],
     },
   },
 } as const
