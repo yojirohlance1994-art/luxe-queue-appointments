@@ -1,7 +1,9 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 import appCss from "../styles.css?url";
 
@@ -81,13 +83,24 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const { isAdmin } = useAuth();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const navigate = useNavigate();
+
+  // Admins can only browse the Admin Suite — redirect away from public pages.
+  useEffect(() => {
+    if (isAdmin && !pathname.startsWith("/admin") && pathname !== "/login") {
+      navigate({ to: "/admin" });
+    }
+  }, [isAdmin, pathname, navigate]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
         <Outlet />
       </main>
-      <Footer />
+      {!isAdmin && <Footer />}
       <Toaster />
     </div>
   );

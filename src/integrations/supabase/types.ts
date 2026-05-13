@@ -53,6 +53,7 @@ export type Database = {
           created_at: string
           id: string
           notes: string | null
+          package_id: string | null
           preferred_at: string
           queue_seq: number
           service_id: string
@@ -65,6 +66,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          package_id?: string | null
           preferred_at: string
           queue_seq?: number
           service_id: string
@@ -77,6 +79,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          package_id?: string | null
           preferred_at?: string
           queue_seq?: number
           service_id?: string
@@ -89,6 +92,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
             referencedColumns: ["id"]
           },
           {
@@ -159,6 +169,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      service_packages: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          name: string
+          price: number
+          service_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name: string
+          price?: number
+          service_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name?: string
+          price?: number
+          service_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_packages_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
