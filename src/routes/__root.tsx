@@ -87,20 +87,32 @@ function RootComponent() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
 
-  // Admins can only browse the Admin Suite — redirect away from public pages.
+  const onAdminRoute = pathname.startsWith("/admin");
+  const onAuthRoute = pathname === "/login" || pathname === "/signup";
+
+  // Admins are isolated to the Admin Suite — block render and redirect.
   useEffect(() => {
-    if (isAdmin && !pathname.startsWith("/admin") && pathname !== "/login") {
+    if (isAdmin && !onAdminRoute && !onAuthRoute) {
       navigate({ to: "/admin" });
     }
-  }, [isAdmin, pathname, navigate]);
+  }, [isAdmin, onAdminRoute, onAuthRoute, navigate]);
 
+  if (isAdmin && !onAdminRoute && !onAuthRoute) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground text-sm">
+        Redirecting to Admin Suite…
+      </div>
+    );
+  }
+
+  // Admin pages render their own dedicated chrome (sidebar). Public pages get Header + Footer.
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col bg-background">
+      {!onAdminRoute && <Header />}
       <main className="flex-1">
         <Outlet />
       </main>
-      {!isAdmin && <Footer />}
+      {!onAdminRoute && !isAdmin && <Footer />}
       <Toaster />
     </div>
   );
