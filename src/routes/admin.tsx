@@ -109,9 +109,9 @@ function AdminLayout() {
   );
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex bg-background">
+    <div className="min-h-screen flex bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 shrink-0 bg-surface-1 border-r border-white/5">
+      <aside className="hidden lg:flex w-64 shrink-0 bg-surface-1 border-r border-white/5 sticky top-0 h-screen">
         {SidebarContent}
       </aside>
 
@@ -126,11 +126,11 @@ function AdminLayout() {
       )}
 
       <div className="flex-1 min-w-0">
-        <div className="lg:hidden sticky top-20 z-30 glass border-b border-white/5 px-4 py-3 flex items-center justify-between">
-          <button onClick={() => setOpen(true)} className="p-2 rounded-lg hover:bg-white/5">
+        <div className="lg:hidden sticky top-0 z-30 glass border-b border-white/5 px-4 py-3 flex items-center justify-between">
+          <button onClick={() => setOpen(true)} className="p-2 rounded-lg hover:bg-white/5 text-foreground">
             <Menu className="h-5 w-5" />
           </button>
-          <span className="font-display text-lg">Admin</span>
+          <span className="font-display text-lg text-foreground">Admin Suite</span>
           <span className="w-9" />
         </div>
         <Outlet />
