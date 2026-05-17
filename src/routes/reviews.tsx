@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { MessageSquareText, Upload } from "lucide-react";
+import { MessageSquareText, Star, Upload } from "lucide-react";
 
 export const Route = createFileRoute("/reviews")({
   head: () => ({
@@ -35,6 +35,15 @@ const createUuid = () => {
 };
 
 function ReviewsPage() {
+  const [reviews, setReviews] = useState<
+    {
+      id: string;
+      customer_name: string | null;
+      rating: number | null;
+      message: string;
+      created_at: string;
+    }[]
+  >([]);
   const [form, setForm] = useState({
     booking_reference: "",
     customer_name: "",
@@ -44,6 +53,19 @@ function ReviewsPage() {
   });
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("customer_reviews")
+      .select("id, customer_name, rating, message, created_at")
+      .eq("review_type", "review")
+      .eq("status", "reviewed")
+      .eq("public_visible", true)
+      .order("rating", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(12)
+      .then(({ data }) => setReviews(data ?? []));
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,18 +131,45 @@ function ReviewsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 max-w-2xl py-16">
-      <p className="text-xs uppercase tracking-[0.3em] text-primary mb-3">Booking Reference</p>
-      <h1 className="font-display text-5xl font-bold mb-4">Reviews and Concerns</h1>
-      <p className="text-muted-foreground mb-8">
-        Use the reference number from your booking confirmation. No customer account or email
-        sign-in is needed.
-      </p>
+    <div className="container mx-auto px-4 py-16">
+      <section className="max-w-3xl mb-12">
+        <p className="text-xs uppercase tracking-[0.3em] text-primary mb-3">Client Reviews</p>
+        <h1 className="font-display text-5xl font-bold mb-4">
+          Transparent feedback from real visits
+        </h1>
+        <p className="text-muted-foreground">
+          Browse approved client reviews, then submit your own review or concern using your booking
+          reference number.
+        </p>
+      </section>
 
-      <Card className="bg-card text-card-foreground shadow-card">
+      <section className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mb-14">
+        {reviews.length === 0 && (
+          <Card className="bg-surface-1 border-white/5 text-foreground p-6 md:col-span-2 xl:col-span-3">
+            <p className="text-sm text-muted-foreground">
+              Public reviews will appear here after the admin approves them.
+            </p>
+          </Card>
+        )}
+        {reviews.map((review) => (
+          <Card key={review.id} className="bg-surface-1 border-white/5 text-foreground p-6">
+            <div className="flex items-center gap-1 text-primary mb-4">
+              {Array.from({ length: review.rating ?? 5 }).map((_, index) => (
+                <Star key={index} className="h-4 w-4 fill-primary" />
+              ))}
+            </div>
+            <p className="text-sm text-foreground/75 leading-relaxed">"{review.message}"</p>
+            <div className="mt-5 text-xs uppercase tracking-widest text-muted-foreground">
+              {review.customer_name || "Glammee Client"}
+            </div>
+          </Card>
+        ))}
+      </section>
+
+      <Card className="bg-card text-card-foreground shadow-card max-w-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MessageSquareText className="h-5 w-5 text-primary" /> Submit feedback
+            <MessageSquareText className="h-5 w-5 text-primary" /> Enter your review now
           </CardTitle>
         </CardHeader>
         <CardContent>
