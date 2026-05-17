@@ -2,16 +2,21 @@ import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tansta
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ListOrdered, Users, FolderOpen, LogOut, Sparkles, Menu, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  ListOrdered,
+  Users,
+  FolderOpen,
+  LogOut,
+  Menu,
+  Megaphone,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [
-      { title: "Admin — Glammee" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Admin — Glammee" }, { name: "robots", content: "noindex" }],
   }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
@@ -35,6 +40,7 @@ const NAV: { to: string; label: string; icon: any; exact?: boolean }[] = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/queue", label: "Queue", icon: ListOrdered },
   { to: "/admin/staff", label: "Staff", icon: Users },
+  { to: "/admin/content", label: "Content", icon: Megaphone },
   { to: "/admin/records", label: "Records", icon: FolderOpen },
 ];
 
@@ -85,14 +91,11 @@ function AdminLayout() {
 
       <div className="p-4 border-t border-white/5 space-y-3">
         <div className="px-2">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Signed in</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Signed in
+          </div>
           <div className="text-sm font-medium truncate">{email || "—"}</div>
         </div>
-        <Link to="/" className="block">
-          <Button variant="outline" size="sm" className="w-full justify-start gap-2 border-white/10 bg-transparent text-foreground hover:bg-white/5">
-            <Sparkles className="h-4 w-4" /> View public site
-          </Button>
-        </Link>
         <Button
           variant="ghost"
           size="sm"
@@ -127,7 +130,10 @@ function AdminLayout() {
 
       <div className="flex-1 min-w-0">
         <div className="lg:hidden sticky top-0 z-30 glass border-b border-white/5 px-4 py-3 flex items-center justify-between">
-          <button onClick={() => setOpen(true)} className="p-2 rounded-lg hover:bg-white/5 text-foreground">
+          <button
+            onClick={() => setOpen(true)}
+            className="p-2 rounded-lg hover:bg-white/5 text-foreground"
+          >
             <Menu className="h-5 w-5" />
           </button>
           <span className="font-display text-lg text-foreground">Admin Suite</span>

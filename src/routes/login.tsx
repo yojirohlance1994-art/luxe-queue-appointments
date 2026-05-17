@@ -1,17 +1,19 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { User, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+
+const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || "owner@glammee.local";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Sign In — Glammee" },
-      { name: "description", content: "Sign in to your Glammee account to manage bookings." },
+      { title: "Owner Sign In - Glammee" },
+      { name: "description", content: "Owner sign in for the Glammee admin suite." },
     ],
   }),
   component: LoginPage,
@@ -19,13 +21,17 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"client" | "admin">("client");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(OWNER_EMAIL);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (email.trim().toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
+      toast.error("Only the configured owner account can access the admin suite.");
+      return;
+    }
+
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
@@ -37,45 +43,28 @@ function LoginPage() {
       .eq("user_id", data.user!.id);
     const isAdmin = (roles ?? []).some((r) => r.role === "admin");
 
-    if (mode === "admin" && !isAdmin) {
+    if (!isAdmin) {
       await supabase.auth.signOut();
       return toast.error("This account does not have admin access.");
     }
-    toast.success(`Welcome back${isAdmin ? ", admin" : ""}!`);
-    navigate({ to: mode === "admin" ? "/admin" : "/" });
+
+    toast.success("Welcome back, owner.");
+    navigate({ to: "/admin" });
   };
 
   return (
     <div className="container mx-auto px-4 max-w-md py-20">
-      <h1 className="font-display text-4xl font-bold mb-2">Welcome Back</h1>
+      <h1 className="font-display text-4xl font-bold mb-2">Owner Sign In</h1>
       <p className="text-muted-foreground mb-8 text-sm">
-        Choose how you want to sign in.
+        Customer accounts are not used. Admin access is limited to the configured owner account.
       </p>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <button
-          type="button"
-          onClick={() => setMode("client")}
-          className={`rounded-xl border-2 p-4 text-left transition-smooth ${mode === "client" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
-        >
-          <User className={`h-5 w-5 mb-2 ${mode === "client" ? "text-primary" : "text-muted-foreground"}`} />
-          <div className="font-semibold text-sm">Sign in as Client</div>
-          <div className="text-xs text-muted-foreground mt-0.5">Book and manage your appointments</div>
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("admin")}
-          className={`rounded-xl border-2 p-4 text-left transition-smooth ${mode === "admin" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
-        >
-          <ShieldCheck className={`h-5 w-5 mb-2 ${mode === "admin" ? "text-primary" : "text-muted-foreground"}`} />
-          <div className="font-semibold text-sm">Sign in as Admin</div>
-          <div className="text-xs text-muted-foreground mt-0.5">Manage the salon and staff queue</div>
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4 bg-card text-card-foreground p-6 rounded-xl shadow-card">
-        <div className="text-xs font-semibold uppercase tracking-wide text-primary">
-          {mode === "admin" ? "Admin Sign In" : "Client Sign In"}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 bg-card text-card-foreground p-6 rounded-xl shadow-card"
+      >
+        <div className="text-xs font-semibold uppercase tracking-wide text-primary flex items-center gap-1.5">
+          <ShieldCheck className="h-3.5 w-3.5" /> Admin Sign In
         </div>
         <div>
           <Label>Email</Label>
@@ -83,17 +72,21 @@ function LoginPage() {
         </div>
         <div>
           <Label>Password</Label>
-          <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input
+            type="password"
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
-        <Button className="w-full bg-gradient-primary text-primary-foreground" type="submit" disabled={loading}>
-          {loading ? "Signing in…" : mode === "admin" ? "Sign In as Admin" : "Sign In as Client"}
+        <Button
+          className="w-full bg-gradient-primary text-primary-foreground"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? "Signing in..." : "Sign In as Owner"}
         </Button>
-        <p className="text-xs text-center text-muted-foreground pt-2">
-          New to Glammee?{" "}
-          <Link to="/signup" className="text-primary underline font-medium">
-            Create an account
-          </Link>
-        </p>
       </form>
     </div>
   );

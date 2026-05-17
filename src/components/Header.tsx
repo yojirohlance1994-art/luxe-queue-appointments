@@ -2,14 +2,17 @@ import { Link } from "@tanstack/react-router";
 // Logo: replace with your logo at src/assets/logo.png
 import logo from "@/assets/logo.png";
 import { useState } from "react";
-import { BookingDialog } from "@/components/BookingDialog";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut, ShieldCheck, Calendar, LogIn } from "lucide-react";
+import { User, LogOut, ShieldCheck, Calendar, MessageSquareText } from "lucide-react";
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -28,29 +31,75 @@ export function Header() {
       <header className="sticky top-0 z-40 bg-card border-b border-border/40">
         <div className="container mx-auto px-4 lg:px-8 flex items-center justify-between gap-4 h-20">
           <Link to={isAdmin ? "/admin" : "/"} className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <img src={logo} alt="Glammee logo" width={48} height={48} className="h-10 w-10 sm:h-12 sm:w-12" />
+            <img
+              src={logo}
+              alt="Glammee logo"
+              width={48}
+              height={48}
+              className="h-10 w-10 sm:h-12 sm:w-12"
+            />
             <span className="font-display italic text-xl sm:text-2xl md:text-3xl font-bold text-primary">
-              Glammee {isAdmin && <span className="text-xs uppercase tracking-widest text-muted-foreground ml-1">Admin</span>}
+              Glammee{" "}
+              {isAdmin && (
+                <span className="text-xs uppercase tracking-widest text-muted-foreground ml-1">
+                  Admin
+                </span>
+              )}
             </span>
           </Link>
 
           <nav className="flex items-center gap-1 sm:gap-3 md:gap-6">
             {!isAdmin && (
               <>
-                <Link to="/" className={publicLinkClass} activeOptions={{ exact: true }} activeProps={activePublic}>Home</Link>
-                <Link to="/services" className={publicLinkClass} activeProps={activePublic}>Services</Link>
-                <Link to="/team" className={`hidden md:inline-flex ${publicLinkClass}`} activeProps={activePublic}>Our Team</Link>
-                <Link to="/work" className={`hidden md:inline-flex ${publicLinkClass}`} activeProps={activePublic}>Our Work</Link>
-                <Link to="/about" className={publicLinkClass} activeProps={activePublic}>About</Link>
+                <Link
+                  to="/"
+                  className={publicLinkClass}
+                  activeOptions={{ exact: true }}
+                  activeProps={activePublic}
+                >
+                  Home
+                </Link>
+                <Link to="/services" className={publicLinkClass} activeProps={activePublic}>
+                  Services
+                </Link>
+                <Link
+                  to="/team"
+                  className={`hidden md:inline-flex ${publicLinkClass}`}
+                  activeProps={activePublic}
+                >
+                  Our Team
+                </Link>
+                <Link
+                  to="/work"
+                  className={`hidden md:inline-flex ${publicLinkClass}`}
+                  activeProps={activePublic}
+                >
+                  Our Work
+                </Link>
+                <Link
+                  to="/reviews"
+                  className={`hidden md:inline-flex ${publicLinkClass}`}
+                  activeProps={activePublic}
+                >
+                  Reviews
+                </Link>
+                <Link to="/about" className={publicLinkClass} activeProps={activePublic}>
+                  About
+                </Link>
               </>
             )}
             {isAdmin && (
-              <Link to="/admin" className={publicLinkClass} activeProps={activePublic}>Admin Suite</Link>
+              <Link to="/admin" className={publicLinkClass} activeProps={activePublic}>
+                Admin Suite
+              </Link>
             )}
 
             {!isAuthenticated ? (
-              <Link to="/login" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-smooth font-semibold text-sm">
-                <LogIn className="h-4 w-4" /> Sign In
+              <Link
+                to="/reviews"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-smooth font-semibold text-sm"
+              >
+                <MessageSquareText className="h-4 w-4" /> Review
               </Link>
             ) : (
               <DropdownMenu>
@@ -65,17 +114,29 @@ export function Header() {
                     <div className="text-xs text-muted-foreground">Signed in as</div>
                     <div className="text-sm font-medium truncate">{user?.email}</div>
                     <div className="text-xs mt-1 inline-flex items-center gap-1 text-primary font-semibold">
-                      {isAdmin ? <><ShieldCheck className="h-3 w-3" /> Admin</> : <><User className="h-3 w-3" /> Client</>}
+                      {isAdmin ? (
+                        <>
+                          <ShieldCheck className="h-3 w-3" /> Admin
+                        </>
+                      ) : (
+                        <>
+                          <User className="h-3 w-3" /> Client
+                        </>
+                      )}
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {isAdmin ? (
                     <DropdownMenuItem asChild>
-                      <Link to="/admin"><ShieldCheck className="h-4 w-4 mr-2" /> Admin Suite</Link>
+                      <Link to="/admin">
+                        <ShieldCheck className="h-4 w-4 mr-2" /> Admin Suite
+                      </Link>
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem onClick={() => setOpen(true)}>
-                      <Calendar className="h-4 w-4 mr-2" /> Book Appointment
+                    <DropdownMenuItem asChild>
+                      <Link to="/booking">
+                        <Calendar className="h-4 w-4 mr-2" /> Book Appointment
+                      </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -88,8 +149,6 @@ export function Header() {
           </nav>
         </div>
       </header>
-      {/* Booking dialog only available to non-admins */}
-      {!isAdmin && <BookingDialog open={open} onOpenChange={setOpen} />}
     </>
   );
 }

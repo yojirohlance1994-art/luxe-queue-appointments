@@ -13,7 +13,9 @@ import { Route as WorkRouteImport } from './routes/work'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as BookingRouteImport } from './routes/booking'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -21,6 +23,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminStaffRouteImport } from './routes/admin.staff'
 import { Route as AdminRecordsRouteImport } from './routes/admin.records'
 import { Route as AdminQueueRouteImport } from './routes/admin.queue'
+import { Route as AdminContentRouteImport } from './routes/admin.content'
 
 const WorkRoute = WorkRouteImport.update({
   id: '/work',
@@ -42,9 +45,19 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingRoute = BookingRouteImport.update({
+  id: '/booking',
+  path: '/booking',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -82,16 +95,24 @@ const AdminQueueRoute = AdminQueueRouteImport.update({
   path: '/queue',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminContentRoute = AdminContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/booking': typeof BookingRoute
   '/login': typeof LoginRoute
+  '/reviews': typeof ReviewsRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/team': typeof TeamRoute
   '/work': typeof WorkRoute
+  '/admin/content': typeof AdminContentRoute
   '/admin/queue': typeof AdminQueueRoute
   '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -100,11 +121,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/booking': typeof BookingRoute
   '/login': typeof LoginRoute
+  '/reviews': typeof ReviewsRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/team': typeof TeamRoute
   '/work': typeof WorkRoute
+  '/admin/content': typeof AdminContentRoute
   '/admin/queue': typeof AdminQueueRoute
   '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -115,11 +139,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/booking': typeof BookingRoute
   '/login': typeof LoginRoute
+  '/reviews': typeof ReviewsRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/team': typeof TeamRoute
   '/work': typeof WorkRoute
+  '/admin/content': typeof AdminContentRoute
   '/admin/queue': typeof AdminQueueRoute
   '/admin/records': typeof AdminRecordsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -131,11 +158,14 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/booking'
     | '/login'
+    | '/reviews'
     | '/services'
     | '/signup'
     | '/team'
     | '/work'
+    | '/admin/content'
     | '/admin/queue'
     | '/admin/records'
     | '/admin/staff'
@@ -144,11 +174,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/booking'
     | '/login'
+    | '/reviews'
     | '/services'
     | '/signup'
     | '/team'
     | '/work'
+    | '/admin/content'
     | '/admin/queue'
     | '/admin/records'
     | '/admin/staff'
@@ -158,11 +191,14 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/admin'
+    | '/booking'
     | '/login'
+    | '/reviews'
     | '/services'
     | '/signup'
     | '/team'
     | '/work'
+    | '/admin/content'
     | '/admin/queue'
     | '/admin/records'
     | '/admin/staff'
@@ -173,7 +209,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
+  BookingRoute: typeof BookingRoute
   LoginRoute: typeof LoginRoute
+  ReviewsRoute: typeof ReviewsRoute
   ServicesRoute: typeof ServicesRoute
   SignupRoute: typeof SignupRoute
   TeamRoute: typeof TeamRoute
@@ -210,11 +248,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/booking': {
+      id: '/booking'
+      path: '/booking'
+      fullPath: '/booking'
+      preLoaderRoute: typeof BookingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -266,10 +318,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQueueRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/content': {
+      id: '/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AdminContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminContentRoute: typeof AdminContentRoute
   AdminQueueRoute: typeof AdminQueueRoute
   AdminRecordsRoute: typeof AdminRecordsRoute
   AdminStaffRoute: typeof AdminStaffRoute
@@ -277,6 +337,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminContentRoute: AdminContentRoute,
   AdminQueueRoute: AdminQueueRoute,
   AdminRecordsRoute: AdminRecordsRoute,
   AdminStaffRoute: AdminStaffRoute,
@@ -289,7 +350,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
+  BookingRoute: BookingRoute,
   LoginRoute: LoginRoute,
+  ReviewsRoute: ReviewsRoute,
   ServicesRoute: ServicesRoute,
   SignupRoute: SignupRoute,
   TeamRoute: TeamRoute,
@@ -298,3 +361,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
