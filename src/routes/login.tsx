@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ShieldCheck, User } from "lucide-react";
 
-const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || "owner@glammee.local";
+const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || "admin@glammee.com";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -29,11 +29,6 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
-
-    if (mode === "admin" && normalizedEmail !== OWNER_EMAIL.toLowerCase()) {
-      toast.error("Only the configured owner account can access the admin suite.");
-      return;
-    }
 
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({

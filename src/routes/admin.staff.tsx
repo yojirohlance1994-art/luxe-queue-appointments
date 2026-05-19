@@ -240,7 +240,7 @@ function StaffPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 border-white/10 bg-transparent"
+                  className="flex-1 border-white/10 bg-transparent text-foreground hover:bg-white/5 hover:text-foreground"
                   onClick={() => editStaff(s)}
                 >
                   <Edit3 className="h-3.5 w-3.5 mr-1" /> Edit
@@ -291,7 +291,7 @@ function StaffPage() {
               </div>
               <div className="space-y-3">
                 <div>
-                  <Label className="text-foreground">Full name *</Label>
+                  <Label>Full name *</Label>
                   <Input
                     value={editing.full_name ?? ""}
                     onChange={(e) => setEditing({ ...editing, full_name: e.target.value })}
@@ -299,14 +299,14 @@ function StaffPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-foreground">Role / Title</Label>
+                    <Label>Role / Title</Label>
                     <Input
                       value={editing.role ?? ""}
                       onChange={(e) => setEditing({ ...editing, role: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label className="text-foreground">Seniority</Label>
+                    <Label>Seniority</Label>
                     <Select
                       value={editing.seniority ?? "Junior"}
                       onValueChange={(v) => setEditing({ ...editing, seniority: v })}
@@ -325,7 +325,7 @@ function StaffPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-foreground">Category / Specialty</Label>
+                  <Label>Category / Specialty</Label>
                   <Select
                     value={editing.category ?? "hair"}
                     onValueChange={(v) =>
@@ -345,7 +345,7 @@ function StaffPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-foreground">Biography / History</Label>
+                  <Label>Biography / History</Label>
                   <Textarea
                     rows={4}
                     value={editing.bio ?? ""}
@@ -353,7 +353,7 @@ function StaffPage() {
                   />
                 </div>
                 <div>
-                  <Label className="text-foreground">Working days</Label>
+                  <Label>Working days</Label>
                   <div className="grid grid-cols-4 gap-2 mt-2">
                     {DAYS.map((day) => (
                       <button
@@ -368,7 +368,7 @@ function StaffPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-foreground">Schedule notes</Label>
+                  <Label>Schedule notes</Label>
                   <Textarea
                     rows={2}
                     value={editing.schedule_notes ?? ""}
@@ -377,7 +377,7 @@ function StaffPage() {
                 </div>
                 {editing.id && (
                   <div className="rounded-xl border border-border p-3 space-y-3">
-                    <Label className="text-foreground">Specific off days</Label>
+                    <Label>Specific off days</Label>
                     <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
                       <Input
                         type="date"

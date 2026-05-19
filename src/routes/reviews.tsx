@@ -41,6 +41,7 @@ function ReviewsPage() {
       customer_name: string | null;
       rating: number | null;
       message: string;
+      admin_reply: string | null;
       created_at: string;
     }[]
   >([]);
@@ -53,11 +54,13 @@ function ReviewsPage() {
   });
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingReference, setCheckingReference] = useState(false);
+  const [canReview, setCanReview] = useState(false);
 
   useEffect(() => {
     supabase
       .from("customer_reviews")
-      .select("id, customer_name, rating, message, created_at")
+      .select("id, customer_name, rating, message, admin_reply, created_at")
       .eq("review_type", "review")
       .eq("status", "reviewed")
       .eq("public_visible", true)
@@ -67,22 +70,47 @@ function ReviewsPage() {
       .then(({ data }) => setReviews(data ?? []));
   }, []);
 
+  const checkReference = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.booking_reference.trim()) {
+      toast.error("Booking reference is required.");
+      return;
+    }
+    setCheckingReference(true);
+    const { data, error } = await supabase.rpc("booking_can_review", {
+      _booking_reference: form.booking_reference.trim(),
+    });
+    setCheckingReference(false);
+    if (error) return toast.error(error.message);
+    if (!data) {
+      setCanReview(false);
+      toast.error("Reviews open only after the booking is marked completed or service rendered.");
+      return;
+    }
+    setCanReview(true);
+    toast.success("Booking verified. You can now submit your review.");
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.booking_reference.trim() || !form.message.trim()) {
-      toast.error("Booking reference and message are required.");
+    if (!canReview) {
+      toast.error("Please verify a completed booking first.");
+      return;
+    }
+    if (!form.message.trim()) {
+      toast.error("Message is required.");
       return;
     }
 
     setSubmitting(true);
     const reviewId = createUuid();
     try {
-      const { data: refOk, error: refError } = await supabase.rpc("booking_reference_exists", {
+      const { data: refOk, error: refError } = await supabase.rpc("booking_can_review", {
         _booking_reference: form.booking_reference.trim(),
       });
       if (refError) throw refError;
       if (!refOk) {
-        toast.error("We could not find that booking reference.");
+        toast.error("Reviews open only after the booking is marked completed or service rendered.");
         return;
       }
 
@@ -95,7 +123,6 @@ function ReviewsPage() {
           rating: form.review_type === "review" ? Number(form.rating) : null,
           message: form.message.trim(),
         },
-        { returning: "minimal" },
       );
       if (reviewError) throw reviewError;
 
@@ -109,7 +136,7 @@ function ReviewsPage() {
         const { data } = supabase.storage.from("review-photos").getPublicUrl(path);
         const { error: photoError } = await supabase
           .from("review_photos")
-          .insert({ review_id: reviewId, image_url: data.publicUrl }, { returning: "minimal" });
+          .insert({ review_id: reviewId, image_url: data.publicUrl });
         if (photoError) throw photoError;
       }
 
@@ -122,6 +149,7 @@ function ReviewsPage() {
         message: "",
       });
       setFiles([]);
+      setCanReview(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Submission failed.";
       toast.error(message);
@@ -159,6 +187,14 @@ function ReviewsPage() {
               ))}
             </div>
             <p className="text-sm text-foreground/75 leading-relaxed">"{review.message}"</p>
+            {review.admin_reply && (
+              <div className="mt-4 rounded-lg bg-primary/10 p-3 text-sm text-card-foreground">
+                <div className="text-xs uppercase tracking-widest text-primary mb-1">
+                  Glammee reply
+                </div>
+                {review.admin_reply}
+              </div>
+            )}
             <div className="mt-5 text-xs uppercase tracking-widest text-muted-foreground">
               {review.customer_name || "Glammee Client"}
             </div>
@@ -173,25 +209,39 @@ function ReviewsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={submit} className="space-y-4">
+          <form onSubmit={canReview ? submit : checkReference} className="space-y-4">
             <div>
               <Label>Booking Reference *</Label>
               <Input
                 placeholder="QM-XXXXXXXXXX"
                 value={form.booking_reference}
                 onChange={(e) =>
-                  setForm({ ...form, booking_reference: e.target.value.toUpperCase() })
+                  {
+                    setForm({ ...form, booking_reference: e.target.value.toUpperCase() });
+                    setCanReview(false);
+                  }
                 }
                 required
               />
             </div>
-            <div>
-              <Label>Name</Label>
-              <Input
-                value={form.customer_name}
-                onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
-              />
-            </div>
+            {!canReview && (
+              <Button
+                type="submit"
+                disabled={checkingReference}
+                className="w-full bg-gradient-primary text-primary-foreground"
+              >
+                {checkingReference ? "Checking..." : "Enter your review now"}
+              </Button>
+            )}
+            {canReview && (
+              <>
+                <div>
+                  <Label>Name</Label>
+                  <Input
+                    value={form.customer_name}
+                    onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
+                  />
+                </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <Label>Type</Label>
@@ -260,6 +310,8 @@ function ReviewsPage() {
             >
               {submitting ? "Submitting..." : "Submit"}
             </Button>
+              </>
+            )}
           </form>
         </CardContent>
       </Card>

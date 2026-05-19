@@ -1,5 +1,5 @@
 import logo from "@/assets/logo.png";
-import { Phone, Smartphone, Facebook, Instagram, MapPin } from "lucide-react";
+import { Phone, Facebook, MapPin } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export function Footer() {
@@ -8,7 +8,7 @@ export function Footer() {
       <div className="container mx-auto px-4 lg:px-8 py-14 grid gap-10 md:grid-cols-4">
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <img src={logo} alt="Glammee" width={48} height={48} className="h-12 w-12" />
+            <img src={logo} alt="Glammee" width={48} height={48} className="h-12 w-12 rounded-full object-cover" />
             <span className="font-display text-2xl font-bold">Glammee</span>
           </div>
           <p className="text-sm opacity-90 leading-relaxed">
@@ -19,9 +19,9 @@ export function Footer() {
         <div>
           <h4 className="font-display text-lg font-semibold mb-4 tracking-wide">CONTACT</h4>
           <ul className="space-y-3 text-sm">
-            <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> +63 2 8 1234 567</li>
-            <li className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> +63 991 222 3344</li>
-            <li className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5" /> 123 Beauty Lane, Manila</li>
+            <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> 09950454621</li>
+            <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> 09950454621</li>
+            <li className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5" /> 7 Tamarraw Hill Rd, Marulas</li>
           </ul>
         </div>
 
@@ -30,15 +30,27 @@ export function Footer() {
           <ul className="space-y-2 text-sm">
             <li><Link to="/about" className="hover:underline">About Us</Link></li>
             <li><Link to="/services" className="hover:underline">Services</Link></li>
-            <li><a href="#" className="hover:underline">Terms & Conditions</a></li>
+            <li>
+              <Link to="/about" hash="terms" className="hover:underline">
+                Terms & Conditions
+              </Link>
+            </li>
           </ul>
         </div>
 
         <div>
           <h4 className="font-display text-lg font-semibold mb-4 tracking-wide">FOLLOW US</h4>
           <ul className="space-y-2 text-sm">
-            <li className="flex items-center gap-2"><Facebook className="h-4 w-4" /> Facebook</li>
-            <li className="flex items-center gap-2"><Instagram className="h-4 w-4" /> Instagram</li>
+            <li>
+              <a
+                href="https://www.facebook.com/profile.php?id=61572735834853"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 hover:underline"
+              >
+                <Facebook className="h-4 w-4" /> Facebook
+              </a>
+            </li>
           </ul>
         </div>
       </div>

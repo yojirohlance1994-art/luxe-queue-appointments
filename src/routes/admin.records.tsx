@@ -96,7 +96,7 @@ function RecordsPage() {
                             <div>{r.notes || "—"}</div>
                           </div>
                           <div className="sm:col-span-2">
-                            <Button size="sm" variant="outline" className="border-white/10 bg-transparent" onClick={() => showPhotos(r.id)}>
+                            <Button size="sm" variant="outline" className="border-white/10 bg-transparent text-foreground hover:bg-white/5 hover:text-foreground" onClick={() => showPhotos(r.id)}>
                               <ImageIcon className="h-3.5 w-3.5 mr-1" /> View proof / result photos
                             </Button>
                           </div>

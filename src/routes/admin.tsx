@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Megaphone,
+  MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
@@ -41,6 +42,7 @@ const NAV: { to: string; label: string; icon: any; exact?: boolean }[] = [
   { to: "/admin/queue", label: "Queue", icon: ListOrdered },
   { to: "/admin/staff", label: "Staff", icon: Users },
   { to: "/admin/content", label: "Content", icon: Megaphone },
+  { to: "/admin/reviews", label: "Reviews", icon: MessageSquareText },
   { to: "/admin/records", label: "Records", icon: FolderOpen },
 ];
 

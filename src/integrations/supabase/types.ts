@@ -148,6 +148,7 @@ export type Database = {
           ends_at: string | null;
           id: string;
           image_url: string | null;
+          package_id: string | null;
           sort_order: number;
           starts_at: string | null;
           title: string;
@@ -160,6 +161,7 @@ export type Database = {
           ends_at?: string | null;
           id?: string;
           image_url?: string | null;
+          package_id?: string | null;
           sort_order?: number;
           starts_at?: string | null;
           title: string;
@@ -172,15 +174,25 @@ export type Database = {
           ends_at?: string | null;
           id?: string;
           image_url?: string | null;
+          package_id?: string | null;
           sort_order?: number;
           starts_at?: string | null;
           title?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "announcements_package_id_fkey";
+            columns: ["package_id"];
+            isOneToOne: false;
+            referencedRelation: "service_packages";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       customer_reviews: {
         Row: {
+          admin_reply: string | null;
           booking_reference: string;
           created_at: string;
           customer_name: string | null;
@@ -191,8 +203,10 @@ export type Database = {
           review_type: string;
           status: string;
           updated_at: string;
+          replied_at: string | null;
         };
         Insert: {
+          admin_reply?: string | null;
           booking_reference: string;
           created_at?: string;
           customer_name?: string | null;
@@ -203,8 +217,10 @@ export type Database = {
           review_type?: string;
           status?: string;
           updated_at?: string;
+          replied_at?: string | null;
         };
         Update: {
+          admin_reply?: string | null;
           booking_reference?: string;
           created_at?: string;
           customer_name?: string | null;
@@ -215,6 +231,7 @@ export type Database = {
           review_type?: string;
           status?: string;
           updated_at?: string;
+          replied_at?: string | null;
         };
         Relationships: [];
       };
@@ -342,6 +359,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "service_packages_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      service_package_items: {
+        Row: {
+          created_at: string;
+          id: string;
+          package_id: string;
+          service_id: string;
+          sort_order: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          package_id: string;
+          service_id: string;
+          sort_order?: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          package_id?: string;
+          service_id?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_package_items_package_id_fkey";
+            columns: ["package_id"];
+            isOneToOne: false;
+            referencedRelation: "service_packages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_package_items_service_id_fkey";
             columns: ["service_id"];
             isOneToOne: false;
             referencedRelation: "services";
@@ -520,6 +576,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      booking_can_review: {
+        Args: { _booking_reference: string };
+        Returns: boolean;
+      };
       booking_reference_exists: {
         Args: { _booking_reference: string };
         Returns: boolean;

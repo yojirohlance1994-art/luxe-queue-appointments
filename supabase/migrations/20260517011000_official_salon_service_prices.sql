@@ -73,7 +73,7 @@ SELECT public.upsert_service('Color + Highlight + Brazilian', 'hair', 3000, '300
 SELECT public.upsert_service('Pamper Footspa + Classic Pedi', 'nails', 300, '300', 60);
 SELECT public.upsert_service('Pamper Footspa + Classic Mani/Pedi', 'nails', 360, '360', 75);
 SELECT public.upsert_service('Gel Mani + Gel Pedi', 'nails', 630, '630', 90);
-SELECT public.upsert_service('Gel Mani', 'nails', 320, '320', 45);
+SELECT public.upsert_service('Gel Mani', 'nails', 300, '300', 45);
 SELECT public.upsert_service('Gel Pedi', 'nails', 300, '300', 45);
 SELECT public.upsert_service('Pamper Footspa + Gel Pedi', 'nails', 530, '530', 75);
 SELECT public.upsert_service('Pamper Footspa + Classic Pedi + Gel Mani', 'nails', 500, '500', 90);

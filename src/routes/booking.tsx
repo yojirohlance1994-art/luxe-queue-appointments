@@ -11,7 +11,7 @@
  * Location: http://localhost:5173/booking
  */
 
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useBlocker } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,6 +86,7 @@ type Service = {
 type ServicePackage = {
   id: string;
   service_id: string;
+  service_ids?: string[];
   name: string;
   description: string | null;
   price: number;
@@ -148,6 +149,20 @@ function BookingPage() {
       : "hair",
   );
 
+  const hasBookingDraft =
+    selectedServices.length > 0 ||
+    selectedPackages.length > 0 ||
+    Boolean(form.full_name || form.contact_number || form.email || form.date || form.time || form.notes);
+
+  useBlocker({
+    disabled: !hasBookingDraft || submitting,
+    enableBeforeUnload: () => hasBookingDraft && !submitting,
+    shouldBlockFn: () =>
+      !window.confirm(
+        "You have an unfinished booking. If you leave now, your selected services and details will not be saved. Leave this page?",
+      ),
+  });
+
   useEffect(() => {
     supabase
       .from("services")
@@ -156,20 +171,46 @@ function BookingPage() {
       .order("category")
       .then(({ data }) => data && setServices(data as Service[]));
 
-    supabase
-      .from("service_packages")
-      .select("id, service_id, name, description, price, duration_minutes")
-      .eq("active", true)
-      .order("sort_order")
-      .then(({ data }) => data && setPackages(data as ServicePackage[]));
+    Promise.all([
+      supabase
+        .from("service_packages")
+        .select("id, service_id, name, description, price, duration_minutes")
+        .eq("active", true)
+        .order("sort_order"),
+      supabase.from("service_package_items").select("package_id, service_id").order("sort_order"),
+    ]).then(([packageRes, itemRes]) => {
+      const itemsByPackage = ((itemRes.data as { package_id: string; service_id: string }[]) ?? []).reduce(
+        (map, item) => {
+          const ids = map.get(item.package_id) ?? [];
+          ids.push(item.service_id);
+          map.set(item.package_id, ids);
+          return map;
+        },
+        new Map<string, string[]>(),
+      );
+
+      if (packageRes.data) {
+        setPackages(
+          (packageRes.data as ServicePackage[])
+            .map((pkg) => ({
+              ...pkg,
+              service_ids: itemsByPackage.get(pkg.id) ?? [pkg.service_id],
+            }))
+            .filter((pkg) => (pkg.service_ids?.length ?? 0) > 1),
+        );
+      }
+    });
   }, []);
 
   // CALCULATIONS
   const selectedPackageServiceIds = useMemo(
     () =>
       selectedPackages
-        .map((pkgId) => packages.find((pkg) => pkg.id === pkgId)?.service_id)
-        .filter((id): id is string => Boolean(id)),
+        .flatMap((pkgId) => {
+          const pkg = packages.find((item) => item.id === pkgId);
+          return pkg?.service_ids?.length ? pkg.service_ids : pkg?.service_id ? [pkg.service_id] : [];
+        })
+        .filter((id, index, ids): id is string => Boolean(id) && ids.indexOf(id) === index),
     [packages, selectedPackages],
   );
 
@@ -181,13 +222,35 @@ function BookingPage() {
     return serviceIds;
   }, [selectedPackageServiceIds, selectedServices]);
 
+  function effectivePackage(pkg: ServicePackage) {
+    const serviceIds = pkg.service_ids?.length ? pkg.service_ids : [pkg.service_id];
+    const included = serviceIds
+      .map((id) => services.find((service) => service.id === id))
+      .filter(Boolean) as Service[];
+    const subtotal = included.reduce((sum, service) => sum + Number(service.price || 0), 0);
+    const duration = included.reduce(
+      (sum, service) => sum + Number(service.duration_minutes || 0),
+      0,
+    );
+    const discount = included.length >= 3 ? 0.15 : included.length === 2 ? 0.1 : 0;
+    return {
+      included,
+      subtotal,
+      price: subtotal > 0 ? Math.round(subtotal * (1 - discount)) : Number(pkg.price || 0),
+      duration: duration || Number(pkg.duration_minutes || 0),
+    };
+  }
+
   const totalPrice = useMemo(() => {
     const directTotal = selectedServices.reduce(
       (sum, id) => sum + (services.find((s) => s.id === id)?.price || 0),
       0,
     );
     const packageTotal = selectedPackages.reduce(
-      (sum, pkgId) => sum + (packages.find((pkg) => pkg.id === pkgId)?.price || 0),
+      (sum, pkgId) => {
+        const pkg = packages.find((item) => item.id === pkgId);
+        return sum + (pkg ? effectivePackage(pkg).price : 0);
+      },
       0,
     );
     return directTotal + packageTotal;
@@ -199,7 +262,10 @@ function BookingPage() {
       0,
     );
     const packageTotal = selectedPackages.reduce(
-      (sum, pkgId) => sum + (packages.find((pkg) => pkg.id === pkgId)?.duration_minutes || 0),
+      (sum, pkgId) => {
+        const pkg = packages.find((item) => item.id === pkgId);
+        return sum + (pkg ? effectivePackage(pkg).duration : 0);
+      },
       0,
     );
     return directTotal + packageTotal;
@@ -264,7 +330,6 @@ function BookingPage() {
           contact_number: form.contact_number,
           email: null,
         },
-        { returning: "minimal" },
       );
 
       if (cErr) throw cErr;
@@ -434,22 +499,24 @@ function BookingPage() {
             {activeTab === "packages" && (
               <div className="grid gap-4">
                 {packages.map((pkg) => {
-                  const pkgService = services.find((s) => s.id === pkg.service_id);
+                  const calculated = effectivePackage(pkg);
                   return (
                     <Card
                       key={pkg.id}
-                      className={`cursor-pointer transition-all border ${
+                      className={`cursor-pointer transition-all border text-foreground ${
                         selectedPackages.includes(pkg.id)
-                          ? "border-primary bg-primary/5"
-                          : "border-white/10 hover:border-white/20"
+                          ? "border-primary bg-primary/10"
+                          : "border-white/10 bg-surface-1 hover:border-white/20 hover:bg-surface-2"
                       }`}
                       onClick={() => togglePackage(pkg.id)}
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div>
-                            <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                            <CardDescription>{pkg.description}</CardDescription>
+                            <CardTitle className="text-lg text-foreground">{pkg.name}</CardTitle>
+                            <CardDescription className="text-foreground/65">
+                              {pkg.description}
+                            </CardDescription>
                           </div>
                           <Checkbox
                             checked={selectedPackages.includes(pkg.id)}
@@ -458,25 +525,31 @@ function BookingPage() {
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="text-sm text-foreground/70">
+                        <div className="text-sm text-foreground/75">
                           <div className="font-semibold text-foreground mb-2">
-                            Service included:
+                            Services included:
                           </div>
                           <div className="flex items-center gap-2 ml-4">
                             <span className="text-primary">•</span>
-                            {pkgService?.name || "Unknown service"}
+                            {calculated.included.map((service) => service.name).join(", ") ||
+                              "Unknown service"}
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between pt-3 border-t border-white/5">
                           <div>
-                            <div className="text-xs text-foreground/50">Package price</div>
+                            <div className="text-xs text-foreground/60">Package price</div>
                             <div className="font-display text-2xl font-bold text-primary">
-                              {formatPrice(pkg.price)}
+                              {formatPrice(calculated.price)}
                             </div>
+                            {calculated.subtotal > calculated.price && (
+                              <div className="text-xs text-emerald-400">
+                                Saves {formatPrice(calculated.subtotal - calculated.price)}
+                              </div>
+                            )}
                           </div>
-                          <div className="text-sm text-foreground/60">
-                            {pkg.duration_minutes} min
+                          <div className="text-sm text-foreground/70">
+                            {calculated.duration} min
                           </div>
                         </div>
                       </CardContent>
@@ -544,7 +617,13 @@ function BookingPage() {
                     {selectedPackages.map((pkgId) => {
                       const pkg = packages.find((p) => p.id === pkgId);
                       if (!pkg) return null;
-                      const pkgService = services.find((s) => s.id === pkg.service_id);
+                      const calculated = effectivePackage(pkg);
+                      const pkgServiceNames = (pkg.service_ids?.length
+                        ? pkg.service_ids
+                        : [pkg.service_id]
+                      )
+                        .map((id) => services.find((service) => service.id === id)?.name)
+                        .filter(Boolean);
                       return (
                         <div
                           key={pkgId}
@@ -553,10 +632,12 @@ function BookingPage() {
                           <div>
                             <div className="text-foreground">{pkg.name}</div>
                             <div className="text-xs text-foreground/50">
-                              {pkgService?.name || "Service"}
+                              {pkgServiceNames.join(", ") || "Service"}
                             </div>
                           </div>
-                          <div className="font-semibold text-primary">{formatPrice(pkg.price)}</div>
+                          <div className="font-semibold text-primary">
+                            {formatPrice(calculated.price)}
+                          </div>
                         </div>
                       );
                     })}

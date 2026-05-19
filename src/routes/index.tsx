@@ -29,12 +29,7 @@ import {
   Star,
   Clock,
   MapPin,
-  Crown,
-  Wind,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { ALL_PACKAGES, getPackageSavings } from "@/lib/packages-data";
-import { formatPrice } from "@/lib/services-data";
 
 // PLACEHOLDER IMAGE
 // Replace with your actual images
@@ -81,21 +76,21 @@ export const Route = createFileRoute("/")({
 // Edit headline and image filenames here
 const HERO_SLIDES = [
   {
-    src: PLACEHOLDER,
+    src: "/Hero/hero.jpg",
     alt: "Glammee styling chair",
     eyebrow: "Hair - Color - Style",
     headline: "Style that actually suits you.",
     category: "hair",
   },
   {
-    src: PLACEHOLDER,
+    src: "/Hero/hero-nails.jpg.jpg",
     alt: "Glammee nail bar",
     eyebrow: "Nails - Gel - Art",
     headline: "Nails worth showing off.",
     category: "nails",
   },
   {
-    src: PLACEHOLDER,
+    src: "/Hero/hero-makeup.jpg.jpg",
     alt: "Glammee beauty room",
     eyebrow: "Lashes - Brows - Makeup",
     headline: "Polished, never overdone.",
@@ -115,11 +110,21 @@ type ServicePreview = {
   price_note: string | null;
 };
 type Announcement = { id: string; title: string; body: string; image_url: string | null };
+type HomePackage = {
+  id: string;
+  service_id: string;
+  service_ids?: string[];
+  name: string;
+  description: string | null;
+  price: number;
+  duration_minutes: number;
+};
 
 function Index() {
   const [slide, setSlide] = useState(0);
   const [services, setServices] = useState<ServicePreview[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [packages, setPackages] = useState<HomePackage[]>([]);
 
   // AUTO-ROTATE HERO CAROUSEL
   // Changes slide every 5.5 seconds
@@ -144,7 +149,48 @@ function Index() {
       .order("sort_order")
       .limit(3)
       .then(({ data }) => data && setAnnouncements(data as Announcement[]));
+
+    Promise.all([
+      supabase
+        .from("service_packages")
+        .select("id, service_id, name, description, price, duration_minutes")
+        .eq("active", true)
+        .order("sort_order")
+        .limit(6),
+      supabase.from("service_package_items").select("package_id, service_id").order("sort_order"),
+    ]).then(([packageRes, itemRes]) => {
+      const itemsByPackage = ((itemRes.data as { package_id: string; service_id: string }[]) ?? []).reduce(
+        (map, item) => {
+          const ids = map.get(item.package_id) ?? [];
+          ids.push(item.service_id);
+          map.set(item.package_id, ids);
+          return map;
+        },
+        new Map<string, string[]>(),
+      );
+      if (packageRes.data) {
+        setPackages(
+          (packageRes.data as HomePackage[])
+            .map((pkg) => ({
+              ...pkg,
+              service_ids: itemsByPackage.get(pkg.id) ?? [pkg.service_id],
+            }))
+            .filter((pkg) => (pkg.service_ids?.length ?? 0) > 1),
+        );
+      }
+    });
   }, []);
+
+  const packagePricing = (pkg: HomePackage) => {
+    const serviceIds = pkg.service_ids?.length ? pkg.service_ids : [pkg.service_id];
+    const included = serviceIds
+      .map((id) => services.find((service) => service.id === id))
+      .filter(Boolean) as ServicePreview[];
+    const original = included.reduce((sum, service) => sum + Number(service.price || 0), 0);
+    const discount = included.length >= 3 ? 0.15 : included.length === 2 ? 0.1 : 0;
+    const adjusted = original > 0 ? Math.round(original * (1 - discount)) : Number(pkg.price || 0);
+    return { included, original, adjusted, savings: Math.max(original - adjusted, 0) };
+  };
 
   return (
     <>
@@ -216,7 +262,7 @@ function Index() {
                 <Clock className="h-4 w-4 text-primary" /> Same-week appointments
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" /> 123 Beauty Lane, Manila
+                <MapPin className="h-4 w-4 text-primary" /> 7 Tamarraw Hill Rd, Marulas
               </div>
             </div>
           </div>
@@ -442,9 +488,6 @@ function Index() {
       </section>
 
       {/* ============== PACKAGES SHOWCASE ============== */}
-      {/* SALON PACKAGES & BUNDLES */}
-      {/* Edit packages in: src/lib/packages-data.ts */}
-      {/* Packages combine multiple services at discounted prices */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="mb-14">
@@ -459,7 +502,9 @@ function Index() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ALL_PACKAGES.map((pkg) => (
+            {packages.map((pkg) => {
+              const pricing = packagePricing(pkg);
+              return (
               <div
                 key={pkg.id}
                 className="group relative rounded-3xl bg-gradient-surface border border-white/5 p-8 shadow-card hover-lift overflow-hidden transition-all"
@@ -474,12 +519,7 @@ function Index() {
                       </h3>
                       <p className="text-sm text-foreground/60">{pkg.description}</p>
                     </div>
-                    {pkg.icon === "Crown" && (
-                      <Crown className="h-6 w-6 text-rose-400 flex-shrink-0" />
-                    )}
-                    {pkg.icon === "Wind" && (
-                      <Wind className="h-6 w-6 text-blue-400 flex-shrink-0" />
-                    )}
+                    <Sparkles className="h-6 w-6 text-primary flex-shrink-0" />
                   </div>
 
                   {/* Services included */}
@@ -488,8 +528,8 @@ function Index() {
                       Includes:
                     </div>
                     <ul className="space-y-2 text-sm text-foreground/80">
-                      {pkg.serviceIds.map((serviceId) => {
-                        const service = services.find((s) => s.id === serviceId);
+                      {pricing.included.map((service) => {
+                        const serviceId = service.id;
                         return (
                           <li key={serviceId} className="flex items-center gap-2">
                             <span className="text-primary">•</span>
@@ -507,7 +547,7 @@ function Index() {
                         Original
                       </span>
                       <span className="line-through text-foreground/60">
-                        {formatPrice(pkg.originalPrice)}
+                        {peso(pricing.original)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -515,13 +555,13 @@ function Index() {
                         Package
                       </span>
                       <span className="font-display text-2xl font-bold text-primary">
-                        {formatPrice(pkg.packagePrice)}
+                        {peso(pricing.adjusted)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-3 border-t border-white/5">
                       <span className="text-sm font-semibold text-green-400">You Save</span>
                       <span className="font-semibold text-green-400">
-                        {formatPrice(getPackageSavings(pkg))}
+                        {peso(pricing.savings)}
                       </span>
                     </div>
                   </div>
@@ -532,13 +572,14 @@ function Index() {
                     size="lg"
                     className="w-full rounded-full bg-gradient-primary text-primary-foreground hover:opacity-95 shadow-glow"
                   >
-                    <Link to="/booking">
+                    <Link to="/booking" search={{ category: undefined }}>
                       Book {pkg.name} <ArrowRight className="h-4 w-4 ml-1.5" />
                     </Link>
                   </Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -599,7 +640,7 @@ function Index() {
                 <div className="space-y-4">
                   <div className="aspect-[3/4] rounded-3xl overflow-hidden bg-surface-2 shadow-elegant hover-lift">
                     <img
-                      src={PLACEHOLDER}
+                      src="/Team/team-hair.png"
                       alt="Hair stylist at work"
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -608,7 +649,7 @@ function Index() {
                   </div>
                   <div className="aspect-square rounded-3xl overflow-hidden bg-surface-2 shadow-card hover-lift">
                     <img
-                      src={PLACEHOLDER}
+                      src="/Team/team-nails.png"
                       alt="Nail artist working"
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -619,7 +660,7 @@ function Index() {
                 <div className="space-y-4 pt-10">
                   <div className="aspect-square rounded-3xl overflow-hidden bg-surface-2 shadow-card hover-lift">
                     <img
-                      src={PLACEHOLDER}
+                      src="/Team/team-makeup.png"
                       alt="Beauty artist applying makeup"
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -628,7 +669,7 @@ function Index() {
                   </div>
                   <div className="aspect-[3/4] rounded-3xl overflow-hidden bg-surface-2 shadow-elegant hover-lift">
                     <img
-                      src={PLACEHOLDER}
+                      src="/Team/team-group.jpg"
                       alt="Salon team members"
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -667,7 +708,7 @@ function Index() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 row-span-2 aspect-square rounded-3xl overflow-hidden bg-surface-1 shadow-elegant hover-lift">
                   <img
-                    src={PLACEHOLDER}
+                    src="/Portfolio/portfolio-featured.jpg"
                     alt="Featured salon work"
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -676,7 +717,7 @@ function Index() {
                 </div>
                 <div className="aspect-square rounded-2xl overflow-hidden bg-surface-1 shadow-card hover-lift">
                   <img
-                    src={PLACEHOLDER}
+                    src="/Hero/hero-nails.jpg.jpg"
                     alt="Recent salon work 1"
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -685,7 +726,7 @@ function Index() {
                 </div>
                 <div className="aspect-square rounded-2xl overflow-hidden bg-surface-1 shadow-card hover-lift">
                   <img
-                    src={PLACEHOLDER}
+                    src="/Hero/hero-makeup.jpg.jpg"
                     alt="Recent salon work 2"
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -694,7 +735,7 @@ function Index() {
                 </div>
                 <div className="aspect-[3/2] col-span-3 rounded-3xl overflow-hidden bg-surface-1 shadow-elegant hover-lift">
                   <img
-                    src={PLACEHOLDER}
+                    src="/Portfolio/portfolio-wide.jpg"
                     alt="Featured portfolio showcase"
                     className="w-full h-full object-cover"
                     loading="lazy"

@@ -166,6 +166,11 @@
     font-family: 'Playfair Display', Georgia, serif;
     letter-spacing: -0.01em;
   }
+
+  .bg-card label,
+  [role="dialog"].bg-card label {
+    color: var(--color-card-foreground);
+  }
 }
 
 @layer utilities {

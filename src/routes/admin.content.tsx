@@ -24,9 +24,10 @@ export const Route = createFileRoute("/admin/content")({
 });
 
 type Category = "hair" | "nails" | "body" | "beauty" | "lashes" | "waxing";
-type Service = { id: string; name: string };
+type Service = { id: string; name: string; price: number; duration_minutes: number };
 type Announcement = {
   id: string;
+  package_id: string | null;
   title: string;
   body: string;
   image_url: string | null;
@@ -47,6 +48,7 @@ type Portfolio = {
 type PackageRow = {
   id: string;
   service_id: string;
+  service_ids?: string[];
   announcement_id: string | null;
   name: string;
   description: string | null;
@@ -67,21 +69,18 @@ type Inventory = {
   notes: string | null;
   active: boolean;
 };
-type Review = {
-  id: string;
-  booking_reference: string;
-  customer_name: string | null;
-  rating: number | null;
-  review_type: string;
-  message: string;
-  status: string;
-  public_visible: boolean;
-  created_at: string;
-};
 
 const CATEGORIES: Category[] = ["hair", "nails", "lashes", "waxing", "body", "beauty"];
+const INVENTORY_CATEGORIES = [
+  "Hair Care",
+  "Nail Care",
+  "Body & Massage",
+  "Eyelash & Waxing",
+  "General Salon Supplies",
+] as const;
 
 const emptyAnnouncement: Partial<Announcement> = {
+  package_id: null,
   title: "",
   body: "",
   image_url: "",
@@ -100,7 +99,7 @@ const emptyPortfolio: Partial<Portfolio> = {
 };
 const emptyInventory: Partial<Inventory> = {
   item_name: "",
-  category: "",
+  category: "General Salon Supplies",
   quantity: 0,
   unit: "pcs",
   reorder_level: 0,
@@ -108,6 +107,7 @@ const emptyInventory: Partial<Inventory> = {
   active: true,
 };
 const emptyPackage: Partial<PackageRow> = {
+  service_ids: [],
   name: "",
   description: "",
   price: 0,
@@ -133,7 +133,6 @@ function ContentPage() {
   const [portfolio, setPortfolio] = useState<Portfolio[]>([]);
   const [packages, setPackages] = useState<PackageRow[]>([]);
   const [inventory, setInventory] = useState<Inventory[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Partial<Announcement> | null>(
     null,
@@ -144,28 +143,46 @@ function ContentPage() {
   const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
-    const [announcementRes, portfolioRes, packageRes, inventoryRes, reviewRes, serviceRes] =
+    const [announcementRes, portfolioRes, packageRes, packageItemsRes, inventoryRes, serviceRes] =
       await Promise.all([
         supabase.from("announcements").select("*").order("sort_order"),
         supabase.from("portfolio_items").select("*").order("sort_order"),
         supabase.from("service_packages").select("*").order("sort_order"),
+        supabase.from("service_package_items").select("package_id, service_id").order("sort_order"),
         supabase.from("inventory_items").select("*").order("item_name"),
-        supabase.from("customer_reviews").select("*").order("created_at", { ascending: false }),
-        supabase.from("services").select("id, name").eq("active", true).order("name"),
+        supabase
+          .from("services")
+          .select("id, name, price, duration_minutes")
+          .eq("active", true)
+          .order("name"),
       ]);
 
     if (announcementRes.error) toast.error(announcementRes.error.message);
     if (portfolioRes.error) toast.error(portfolioRes.error.message);
     if (packageRes.error) toast.error(packageRes.error.message);
+    if (packageItemsRes.error) toast.error(packageItemsRes.error.message);
     if (inventoryRes.error) toast.error(inventoryRes.error.message);
-    if (reviewRes.error) toast.error(reviewRes.error.message);
     if (serviceRes.error) toast.error(serviceRes.error.message);
+
+    const packageItems = ((packageItemsRes.data as { package_id: string; service_id: string }[]) ?? []).reduce(
+      (map, item) => {
+        const ids = map.get(item.package_id) ?? [];
+        ids.push(item.service_id);
+        map.set(item.package_id, ids);
+        return map;
+      },
+      new Map<string, string[]>(),
+    );
 
     setAnnouncements((announcementRes.data as Announcement[]) ?? []);
     setPortfolio((portfolioRes.data as Portfolio[]) ?? []);
-    setPackages((packageRes.data as PackageRow[]) ?? []);
+    setPackages(
+      ((packageRes.data as PackageRow[]) ?? []).map((pkg) => ({
+        ...pkg,
+        service_ids: packageItems.get(pkg.id) ?? [pkg.service_id],
+      })),
+    );
     setInventory((inventoryRes.data as Inventory[]) ?? []);
-    setReviews((reviewRes.data as Review[]) ?? []);
     setServices((serviceRes.data as Service[]) ?? []);
   }, []);
 
@@ -192,6 +209,7 @@ function ContentPage() {
     if (!editingAnnouncement?.title || !editingAnnouncement.body)
       return toast.error("Title and body are required.");
     const payload = {
+      package_id: editingAnnouncement.package_id || null,
       title: editingAnnouncement.title,
       body: editingAnnouncement.body,
       image_url: editingAnnouncement.image_url || null,
@@ -230,10 +248,15 @@ function ContentPage() {
   };
 
   const savePackage = async () => {
-    if (!editingPackage?.service_id || !editingPackage.name)
-      return toast.error("Service and package name are required.");
+    const serviceIds = editingPackage?.service_ids?.length
+      ? editingPackage.service_ids
+      : editingPackage?.service_id
+        ? [editingPackage.service_id]
+        : [];
+    if (serviceIds.length === 0 || !editingPackage?.name)
+      return toast.error("At least one service and package name are required.");
     const payload = {
-      service_id: editingPackage.service_id,
+      service_id: serviceIds[0],
       announcement_id: editingPackage.announcement_id || null,
       name: editingPackage.name,
       description: editingPackage.description || null,
@@ -244,10 +267,31 @@ function ContentPage() {
       active: editingPackage.active ?? true,
       sort_order: Number(editingPackage.sort_order ?? 0),
     };
-    const { error } = editingPackage.id
-      ? await supabase.from("service_packages").update(payload).eq("id", editingPackage.id)
-      : await supabase.from("service_packages").insert(payload);
+    const { data, error } = editingPackage.id
+      ? await supabase
+          .from("service_packages")
+          .update(payload)
+          .eq("id", editingPackage.id)
+          .select("id")
+          .single()
+      : await supabase.from("service_packages").insert(payload).select("id").single();
     if (error) return toast.error(error.message);
+    const packageId = editingPackage.id ?? data?.id;
+    if (packageId) {
+      const { error: deleteError } = await supabase
+        .from("service_package_items")
+        .delete()
+        .eq("package_id", packageId);
+      if (deleteError) return toast.error(deleteError.message);
+      const { error: itemError } = await supabase.from("service_package_items").insert(
+        serviceIds.map((serviceId, index) => ({
+          package_id: packageId,
+          service_id: serviceId,
+          sort_order: index + 1,
+        })),
+      );
+      if (itemError) return toast.error(itemError.message);
+    }
     toast.success("Package saved");
     setEditingPackage(null);
     load();
@@ -257,7 +301,7 @@ function ContentPage() {
     if (!editingInventory?.item_name) return toast.error("Item name is required.");
     const payload = {
       item_name: editingInventory.item_name,
-      category: editingInventory.category || null,
+      category: editingInventory.category || "General Salon Supplies",
       quantity: Number(editingInventory.quantity ?? 0),
       unit: editingInventory.unit || "pcs",
       reorder_level: Number(editingInventory.reorder_level ?? 0),
@@ -284,13 +328,21 @@ function ContentPage() {
     load();
   };
 
-  const updateReview = async (id: string, changes: Partial<Review>) => {
-    const { error } = await supabase.from("customer_reviews").update(changes).eq("id", id);
-    if (error) return toast.error(error.message);
-    load();
-  };
-
   const serviceName = useMemo(() => new Map(services.map((s) => [s.id, s.name])), [services]);
+  const serviceLookup = useMemo(() => new Map(services.map((s) => [s.id, s])), [services]);
+
+  const calculatePackage = (serviceIds: string[]) => {
+    const selected = serviceIds.map((id) => serviceLookup.get(id)).filter(Boolean) as Service[];
+    const subtotal = selected.reduce((sum, service) => sum + Number(service.price || 0), 0);
+    const duration = selected.reduce((sum, service) => sum + Number(service.duration_minutes || 0), 0);
+    const discount = selected.length >= 3 ? 0.15 : selected.length === 2 ? 0.1 : 0;
+    return {
+      subtotal,
+      price: Math.round(subtotal * (1 - discount)),
+      duration,
+      discount,
+    };
+  };
 
   return (
     <div className="p-6 lg:p-10 space-y-6 animate-float-in">
@@ -298,7 +350,7 @@ function ContentPage() {
         <p className="text-xs uppercase tracking-[0.3em] text-primary mb-2">Content</p>
         <h1 className="font-display text-4xl font-bold">Site and Operations</h1>
         <p className="text-muted-foreground mt-1">
-          Manage announcements, work photos, packages, inventory, and customer feedback.
+          Manage announcements, work photos, packages, and inventory.
         </p>
       </header>
 
@@ -308,7 +360,6 @@ function ContentPage() {
           <TabsTrigger value="portfolio">Our Works</TabsTrigger>
           <TabsTrigger value="packages">Packages</TabsTrigger>
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
         </TabsList>
 
         <TabsContent value="announcements" className="mt-5">
@@ -322,7 +373,9 @@ function ContentPage() {
               <AdminCard
                 key={a.id}
                 title={a.title}
-                subtitle={a.active ? "Visible when in date range" : "Hidden"}
+                subtitle={`${a.package_id ? "Linked package" : "General announcement"} - ${
+                  a.active ? "visible when in date range" : "hidden"
+                }`}
                 onEdit={() =>
                   setEditingAnnouncement({
                     ...a,
@@ -374,7 +427,12 @@ function ContentPage() {
               <AdminCard
                 key={p.id}
                 title={p.name}
-                subtitle={`${serviceName.get(p.service_id) ?? "Service"} - PHP ${p.price}`}
+                subtitle={`${
+                  (p.service_ids ?? [p.service_id])
+                    .map((id) => serviceName.get(id))
+                    .filter(Boolean)
+                    .join(", ") || "Service"
+                } - PHP ${p.price}`}
                 onEdit={() =>
                   setEditingPackage({
                     ...p,
@@ -413,48 +471,6 @@ function ContentPage() {
           </ListGrid>
         </TabsContent>
 
-        <TabsContent value="reviews" className="mt-5">
-          <div className="grid gap-3">
-            {reviews.map((r) => (
-              <Card key={r.id} className="bg-surface-1 border-white/5 text-foreground p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <div className="text-xs uppercase tracking-widest text-primary">
-                      {r.review_type} - {r.booking_reference}
-                    </div>
-                    <h3 className="font-display text-xl">{r.customer_name || "Customer"}</h3>
-                    <p className="text-sm text-foreground/70 mt-2 whitespace-pre-wrap">
-                      {r.message}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Select
-                      value={r.status}
-                      onValueChange={(v) => updateReview(r.id, { status: v })}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="reviewed">Reviewed</SelectItem>
-                        <SelectItem value="resolved">Resolved</SelectItem>
-                        <SelectItem value="hidden">Hidden</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant={r.public_visible ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => updateReview(r.id, { public_visible: !r.public_visible })}
-                    >
-                      {r.public_visible ? "Public" : "Hidden"}
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
       </Tabs>
 
       <Dialog open={!!editingAnnouncement} onOpenChange={(v) => !v && setEditingAnnouncement(null)}>
@@ -492,6 +508,30 @@ function ContentPage() {
                   )
                 }
               />
+              <div>
+                <Label>Linked Package</Label>
+                <Select
+                  value={editingAnnouncement.package_id || "none"}
+                  onValueChange={(v) =>
+                    setEditingAnnouncement({
+                      ...editingAnnouncement,
+                      package_id: v === "none" ? null : v,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select package" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {packages.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name} - PHP {p.price}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <DatePair
                 starts={editingAnnouncement.starts_at}
                 ends={editingAnnouncement.ends_at}
@@ -570,22 +610,69 @@ function ContentPage() {
           {editingPackage && (
             <FormStack>
               <div>
-                <Label>Service</Label>
-                <Select
-                  value={editingPackage.service_id}
-                  onValueChange={(v) => setEditingPackage({ ...editingPackage, service_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {services.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Included services</Label>
+                <div className="mt-2 max-h-52 overflow-y-auto rounded-lg border border-border bg-input/40 p-2 space-y-1">
+                  {services.map((s) => {
+                    const ids = editingPackage.service_ids ?? [];
+                    const checked = ids.includes(s.id);
+                    return (
+                      <label
+                        key={s.id}
+                        className="flex items-start gap-2 rounded-md px-2 py-2 text-sm hover:bg-background/40"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(value) => {
+                            const nextIds = value
+                              ? [...ids, s.id]
+                              : ids.filter((id) => id !== s.id);
+                            const calculated = calculatePackage(nextIds);
+                            setEditingPackage({
+                              ...editingPackage,
+                              service_ids: nextIds,
+                              service_id: nextIds[0],
+                              price: calculated.price,
+                              duration_minutes: calculated.duration,
+                            });
+                          }}
+                        />
+                        <span className="flex-1">
+                          <span className="block font-medium">{s.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            PHP {s.price} - {s.duration_minutes} min
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {(() => {
+                  const calculated = calculatePackage(editingPackage.service_ids ?? []);
+                  return (
+                    <div className="mt-2 rounded-lg bg-primary/10 px-3 py-2 text-xs text-card-foreground">
+                      Services subtotal: PHP {calculated.subtotal}. Recommended package price:
+                      <button
+                        type="button"
+                        className="ml-1 font-semibold text-primary hover:underline"
+                        onClick={() =>
+                          setEditingPackage({
+                            ...editingPackage,
+                            price: calculated.price,
+                            duration_minutes: calculated.duration,
+                          })
+                        }
+                      >
+                        PHP {calculated.price}
+                      </button>
+                      {calculated.discount > 0 && (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          ({Math.round(calculated.discount * 100)}% bundle discount)
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
               <TextField
                 label="Name"
@@ -669,8 +756,9 @@ function ContentPage() {
               />
               <TextField
                 label="Category"
-                value={editingInventory.category ?? ""}
+                value={editingInventory.category ?? "General Salon Supplies"}
                 onChange={(v) => setEditingInventory({ ...editingInventory, category: v })}
+                options={INVENTORY_CATEGORIES}
               />
               <div className="grid grid-cols-3 gap-3">
                 <TextField
@@ -770,7 +858,7 @@ function AdminCard({
         <Button
           size="sm"
           variant="outline"
-          className="flex-1 border-white/10 bg-transparent"
+          className="flex-1 border-white/10 bg-transparent text-foreground hover:bg-white/5 hover:text-foreground"
           onClick={onEdit}
         >
           <Edit3 className="h-3.5 w-3.5 mr-1" /> Edit
@@ -797,16 +885,33 @@ function TextField({
   value,
   onChange,
   type = "text",
+  options,
 }: {
   label: string;
   value: string | number | undefined;
   onChange: (value: string) => void;
   type?: string;
+  options?: readonly string[];
 }) {
   return (
     <div>
       <Label>{label}</Label>
+      {options ? (
+        <Select value={String(value ?? "")} onValueChange={onChange}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
       <Input type={type} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
+      )}
     </div>
   );
 }

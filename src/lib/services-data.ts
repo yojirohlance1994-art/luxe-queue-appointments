@@ -23,6 +23,7 @@ export interface Service {
   price: number;
   duration_minutes: number;
   description?: string;
+  image?: string;
 }
 
 // HAIR CATEGORY SERVICES
@@ -36,6 +37,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 120,
     duration_minutes: 30,
     description: "Professional haircut for men or women",
+    image: "/portfolio/hair-cut-men-women.jpg",
   },
   {
     id: "hair-cut-men-shampoo",
@@ -44,6 +46,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 170,
     duration_minutes: 45,
     description: "Haircut with complimentary shampoo and blow dry",
+    image: "/portfolio/hair-cut-men-shampoo.jpg",
   },
   {
     id: "hair-cut-women-shampoo",
@@ -52,6 +55,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 250,
     duration_minutes: 60,
     description: "Haircut with shampoo and professional blow dry",
+    image: "/portfolio/hair-cut-women-shampoo.jpg",
   },
   {
     id: "shampoo-blower",
@@ -60,6 +64,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 150,
     duration_minutes: 30,
     description: "Professional shampoo and blow dry styling",
+    image: "/portfolio/shampoo-blower.jpg",
   },
   {
     id: "hair-makeup",
@@ -68,6 +73,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 700,
     duration_minutes: 120,
     description: "Complete hair styling and makeup application",
+    image: "/portfolio/hair-makeup.jpg",
   },
 
   // Hair Treatment
@@ -78,6 +84,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 250,
     duration_minutes: 45,
     description: "Nourishing hot oil hair treatment",
+    image: "/portfolio/hot-oil.jpg",
   },
   {
     id: "hair-spa",
@@ -86,6 +93,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 350,
     duration_minutes: 60,
     description: "Deep conditioning spa treatment for hair",
+    image: "/portfolio/hair-spa.jpg",
   },
   {
     id: "keratin-cream",
@@ -94,6 +102,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 500,
     duration_minutes: 90,
     description: "Keratin treatment for smoothing and shine",
+    image: "/portfolio/keratin-cream.jpg",
   },
   {
     id: "brazilian-blowout",
@@ -102,6 +111,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 800,
     duration_minutes: 120,
     description: "Brazilian blowout smoothing treatment",
+    image: "/portfolio/brazilian-blowout.jpg",
   },
   {
     id: "brazilian-botox",
@@ -110,6 +120,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 1000,
     duration_minutes: 120,
     description: "Brazilian botox hair rejuvenation treatment",
+    image: "/portfolio/brazilian-botox.jpg",
   },
 
   // Hair Coloring
@@ -120,6 +131,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 500,
     duration_minutes: 60,
     description: "Men's basic hair color application",
+    image: "/portfolio/men-basic-tone.jpg",
   },
   {
     id: "women-basic-tone",
@@ -128,6 +140,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 800,
     duration_minutes: 90,
     description: "Women's basic hair color application",
+    image: "/portfolio/women-basic-tone.jpg",
   },
   {
     id: "women-regrowth",
@@ -136,6 +149,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 400,
     duration_minutes: 60,
     description: "Regrowth color touch-up for women",
+    image: "/portfolio/women-regrowth.jpg",
   },
   {
     id: "women-short-hair",
@@ -144,6 +158,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 600,
     duration_minutes: 75,
     description: "Color for women with short hair",
+    image: "/portfolio/women-short-hair.jpg",
   },
 
   // Fashion Color
@@ -154,6 +169,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 350,
     duration_minutes: 90,
     description: "Men's hair highlights first application",
+    image: "/portfolio/highlight-men.jpg",
   },
   {
     id: "highlight-women",
@@ -162,6 +178,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 500,
     duration_minutes: 120,
     description: "Women's hair highlights first application",
+    image: "/portfolio/highlight-women.jpg",
   },
   {
     id: "full-bleach-women",
@@ -170,6 +187,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 800,
     duration_minutes: 150,
     description: "Full hair bleaching service for women",
+    image: "/portfolio/full-bleach-women.jpg",
   },
   {
     id: "ombre-color-shade",
@@ -178,6 +196,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 800,
     duration_minutes: 150,
     description: "Ombre or color shade blending",
+    image: "/portfolio/ombre-color-shade.jpg",
   },
   {
     id: "balayage-color",
@@ -186,6 +205,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 2000,
     duration_minutes: 180,
     description: "Professional balayage color technique",
+    image: "/portfolio/balayage-color.jpg",
   },
 
   // Hair Perm
@@ -196,6 +216,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 500,
     duration_minutes: 90,
     description: "Traditional permanent wave for men",
+    image: "/portfolio/perm-men.jpg",
   },
   {
     id: "perm-women",
@@ -204,6 +225,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 800,
     duration_minutes: 120,
     description: "Traditional permanent wave for women",
+    image: "/portfolio/perm-women.jpg",
   },
   {
     id: "air-perm-women",
@@ -212,6 +234,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 1500,
     duration_minutes: 150,
     description: "Air perming technique for women",
+    image: "/portfolio/air-perm-women.jpg",
   },
 
   // Hair Rebonding
@@ -222,6 +245,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 800,
     duration_minutes: 120,
     description: "Hair rebonding straightening for men",
+    image: "/portfolio/rebond-men.jpg",
   },
   {
     id: "rebond-women",
@@ -230,6 +254,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 1000,
     duration_minutes: 150,
     description: "Hair rebonding straightening for women",
+    image: "/portfolio/rebond-women.jpg",
   },
   {
     id: "brazilian-blowout-rebond",
@@ -238,6 +263,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 1500,
     duration_minutes: 180,
     description: "Brazilian treatment with blowout",
+    image: "/portfolio/brazilian-blowout-rebond.jpg",
   },
   {
     id: "color-rebond",
@@ -246,6 +272,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 1500,
     duration_minutes: 180,
     description: "Rebonding with color application",
+    image: "/portfolio/color-rebond.jpg",
   },
   {
     id: "brazilian-botox-rebond",
@@ -254,6 +281,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 1800,
     duration_minutes: 180,
     description: "Brazilian treatment with botox",
+    image: "/portfolio/brazilian-botox-rebond.jpg",
   },
   {
     id: "color-brazilian",
@@ -262,6 +290,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 2500,
     duration_minutes: 210,
     description: "Brazilian treatment with color",
+    image: "/portfolio/color-brazilian.jpg",
   },
   {
     id: "color-highlight-brazilian",
@@ -270,6 +299,7 @@ export const HAIR_SERVICES: Service[] = [
     price: 3000,
     duration_minutes: 240,
     description: "Complete color, highlight, and Brazilian treatment",
+    image: "/portfolio/color-highlight-brazilian.jpg",
   },
 ];
 
@@ -282,6 +312,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 300,
     duration_minutes: 45,
+    image: "/portfolio/footspa-classic-pedicure.jpg",
   },
   {
     id: "footspa-classic-mani-pedi",
@@ -289,6 +320,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 360,
     duration_minutes: 60,
+    image: "/portfolio/footspa-classic-mani-pedi.jpg",
   },
   {
     id: "gel-mani-pedi",
@@ -296,13 +328,15 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 630,
     duration_minutes: 75,
+    image: "/portfolio/gel-mani-pedi.jpg",
   },
   {
     id: "gel-manicure",
     name: "Gel Manicure",
     category: "nails",
-    price: 320,
+    price: 300,
     duration_minutes: 45,
+    image: "/portfolio/gel-manicure.jpg",
   },
   {
     id: "gel-pedicure",
@@ -310,6 +344,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 300,
     duration_minutes: 45,
+    image: "/portfolio/gel-pedicure.jpg",
   },
   {
     id: "footspa-gel-pedi",
@@ -317,6 +352,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 530,
     duration_minutes: 60,
+    image: "/portfolio/footspa-gel-pedi.jpg",
   },
   {
     id: "footspa-classic-gel-mani",
@@ -324,6 +360,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 500,
     duration_minutes: 75,
+    image: "/portfolio/footspa-classic-gel-mani.jpg",
   },
   {
     id: "footspa-gel-mani-pedi",
@@ -331,6 +368,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 850,
     duration_minutes: 90,
+    image: "/portfolio/footspa-gel-mani-pedi.jpg",
   },
   {
     id: "classic-mani-pedi",
@@ -338,6 +376,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 250,
     duration_minutes: 60,
+    image: "/portfolio/classic-mani-pedi.jpg",
   },
   {
     id: "luxury-footspa",
@@ -345,6 +384,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 270,
     duration_minutes: 30,
+    image: "/portfolio/luxury-footspa.jpg",
   },
   {
     id: "luxury-footspa-pedi",
@@ -352,6 +392,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 370,
     duration_minutes: 45,
+    image: "/portfolio/luxury-footspa-pedi.jpg",
   },
   {
     id: "luxury-footspa-full",
@@ -359,6 +400,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 600,
     duration_minutes: 90,
+    image: "/portfolio/luxury-footspa-full.jpg",
   },
   {
     id: "classic-manicure",
@@ -366,6 +408,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 100,
     duration_minutes: 30,
+    image: "/portfolio/classic-manicure.jpg",
   },
   {
     id: "pedicure",
@@ -373,6 +416,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 100,
     duration_minutes: 30,
+    image: "/portfolio/pedicure.jpg",
   },
   {
     id: "add-on-scrub",
@@ -380,6 +424,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 50,
     duration_minutes: 10,
+    image: "/portfolio/add-on-scrub.jpg",
   },
   {
     id: "footspa-pedi-scrub",
@@ -387,6 +432,7 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 400,
     duration_minutes: 60,
+    image: "/portfolio/footspa-pedi-scrub.jpg",
   },
   {
     id: "foot-massage",
@@ -394,46 +440,47 @@ export const NAIL_SERVICES: Service[] = [
     category: "nails",
     price: 300,
     duration_minutes: 30,
+    image: "/portfolio/foot-massage.jpg",
   },
 ];
 
 // WAXING SERVICES
 // Edit waxing service names, prices, and durations here
 export const WAXING_SERVICES: Service[] = [
-  { id: "wax-eyebrow", name: "Eyebrow", category: "waxing", price: 150, duration_minutes: 15 },
-  { id: "wax-upper-lip", name: "Upper Lip", category: "waxing", price: 150, duration_minutes: 10 },
-  { id: "wax-lower-lip", name: "Lower Lip", category: "waxing", price: 150, duration_minutes: 10 },
-  { id: "wax-underarm", name: "Underarm", category: "waxing", price: 200, duration_minutes: 15 },
-  { id: "wax-half-leg", name: "Half Leg", category: "waxing", price: 350, duration_minutes: 30 },
-  { id: "wax-whole-leg", name: "Whole Leg", category: "waxing", price: 600, duration_minutes: 45 },
-  { id: "wax-half-arm", name: "Half Arm", category: "waxing", price: 300, duration_minutes: 20 },
-  { id: "wax-whole-arm", name: "Whole Arm", category: "waxing", price: 550, duration_minutes: 30 },
-  { id: "wax-chest", name: "Chest", category: "waxing", price: 300, duration_minutes: 20 },
-  { id: "wax-back", name: "Back", category: "waxing", price: 450, duration_minutes: 30 },
-  { id: "wax-whole-face", name: "Whole Face", category: "waxing", price: 250, duration_minutes: 30 },
-  { id: "wax-bikini", name: "Bikini", category: "waxing", price: 250, duration_minutes: 30 },
-  { id: "wax-brazilian", name: "Brazilian", category: "waxing", price: 550, duration_minutes: 45 },
-  { id: "wax-unlimited", name: "Unlimited", category: "waxing", price: 1600, duration_minutes: 180 },
+  { id: "wax-eyebrow", name: "Eyebrow", category: "waxing", price: 150, duration_minutes: 15, image: "/portfolio/wax-eyebrow.jpg" },
+  { id: "wax-upper-lip", name: "Upper Lip", category: "waxing", price: 150, duration_minutes: 10, image: "/portfolio/wax-upper-lip.jpg" },
+  { id: "wax-lower-lip", name: "Lower Lip", category: "waxing", price: 150, duration_minutes: 10, image: "/portfolio/wax-lower-lip.jpg" },
+  { id: "wax-underarm", name: "Underarm", category: "waxing", price: 200, duration_minutes: 15, image: "/portfolio/wax-underarm.jpg" },
+  { id: "wax-half-leg", name: "Half Leg", category: "waxing", price: 350, duration_minutes: 30, image: "/portfolio/wax-half-leg.jpg" },
+  { id: "wax-whole-leg", name: "Whole Leg", category: "waxing", price: 600, duration_minutes: 45, image: "/portfolio/wax-whole-leg.jpg" },
+  { id: "wax-half-arm", name: "Half Arm", category: "waxing", price: 300, duration_minutes: 20, image: "/portfolio/wax-half-arm.jpg" },
+  { id: "wax-whole-arm", name: "Whole Arm", category: "waxing", price: 550, duration_minutes: 30, image: "/portfolio/wax-whole-arm.jpg" },
+  { id: "wax-chest", name: "Chest", category: "waxing", price: 300, duration_minutes: 20, image: "/portfolio/wax-chest.jpg" },
+  { id: "wax-back", name: "Back", category: "waxing", price: 450, duration_minutes: 30, image: "/portfolio/wax-back.jpg" },
+  { id: "wax-whole-face", name: "Whole Face", category: "waxing", price: 250, duration_minutes: 30, image: "/portfolio/wax-whole-face.jpg" },
+  { id: "wax-bikini", name: "Bikini", category: "waxing", price: 250, duration_minutes: 30, image: "/portfolio/wax-bikini.jpg" },
+  { id: "wax-brazilian", name: "Brazilian", category: "waxing", price: 550, duration_minutes: 45, image: "/portfolio/wax-brazilian.jpg" },
+  { id: "wax-unlimited", name: "Unlimited", category: "waxing", price: 1600, duration_minutes: 180, image: "/portfolio/wax-unlimited.jpg" },
 ];
 
 // EYELASH EXTENSION SERVICES
 // Edit lash services and prices here
 export const LASH_SERVICES: Service[] = [
-  { id: "lash-human-hair-450", name: "Human Hair Mascara (Classic)", category: "lashes", price: 450, duration_minutes: 60 },
-  { id: "lash-human-hair-550", name: "Human Hair Mascara (Volume)", category: "lashes", price: 550, duration_minutes: 75 },
-  { id: "lash-human-hair-600", name: "Human Hair Mascara (Premium)", category: "lashes", price: 600, duration_minutes: 90 },
-  { id: "eyebrow-tint", name: "Eye Brow Tint", category: "lashes", price: 150, duration_minutes: 20 },
-  { id: "lash-tint", name: "Eye Lash Tint", category: "lashes", price: 150, duration_minutes: 20 },
-  { id: "keratin-lash-lift", name: "Keratin Lash Lift", category: "lashes", price: 500, duration_minutes: 60 },
+  { id: "lash-human-hair-450", name: "Human Hair Mascara (Classic)", category: "lashes", price: 450, duration_minutes: 60, image: "/portfolio/lash-human-hair-450.jpg" },
+  { id: "lash-human-hair-550", name: "Human Hair Mascara (Volume)", category: "lashes", price: 550, duration_minutes: 75, image: "/portfolio/lash-human-hair-550.jpg" },
+  { id: "lash-human-hair-600", name: "Human Hair Mascara (Premium)", category: "lashes", price: 600, duration_minutes: 90, image: "/portfolio/lash-human-hair-600.jpg" },
+  { id: "eyebrow-tint", name: "Eye Brow Tint", category: "lashes", price: 150, duration_minutes: 20, image: "/portfolio/eyebrow-tint.jpg" },
+  { id: "lash-tint", name: "Eye Lash Tint", category: "lashes", price: 150, duration_minutes: 20, image: "/portfolio/lash-tint.jpg" },
+  { id: "keratin-lash-lift", name: "Keratin Lash Lift", category: "lashes", price: 500, duration_minutes: 60, image: "/portfolio/keratin-lash-lift.jpg" },
 ];
 
 // BODY MASSAGE SERVICES
 // Edit massage service names, prices, and durations here
 export const MASSAGE_SERVICES: Service[] = [
-  { id: "foot-massage-30", name: "Foot Massage (30 mins)", category: "massage", price: 250, duration_minutes: 30 },
-  { id: "back-massage-30", name: "Back Massage (30 mins)", category: "massage", price: 300, duration_minutes: 30 },
-  { id: "legs-massage-30", name: "Legs Massage (30 mins)", category: "massage", price: 200, duration_minutes: 30 },
-  { id: "whole-body-massage", name: "Whole Body Massage (1 hour)", category: "massage", price: 400, duration_minutes: 60 },
+  { id: "foot-massage-30", name: "Foot Massage (30 mins)", category: "massage", price: 250, duration_minutes: 30, image: "/portfolio/foot-massage-30.jpg" },
+  { id: "back-massage-30", name: "Back Massage (30 mins)", category: "massage", price: 300, duration_minutes: 30, image: "/portfolio/back-massage-30.jpg" },
+  { id: "legs-massage-30", name: "Legs Massage (30 mins)", category: "massage", price: 200, duration_minutes: 30, image: "/portfolio/legs-massage-30.jpg" },
+  { id: "whole-body-massage", name: "Whole Body Massage (1 hour)", category: "massage", price: 400, duration_minutes: 60, image: "/portfolio/whole-body-massage.jpg" },
 ];
 
 // ALL SERVICES COMBINED

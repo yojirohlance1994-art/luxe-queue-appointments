@@ -120,7 +120,7 @@ function QueuePage() {
             size="sm"
             onClick={load}
             disabled={loading}
-            className="border-white/10 bg-transparent"
+            className="border-white/10 bg-transparent text-foreground hover:bg-white/5 hover:text-foreground"
           >
             {loading ? "Refreshing…" : "Refresh"}
           </Button>
@@ -128,7 +128,7 @@ function QueuePage() {
             variant="outline"
             size="sm"
             onClick={() => setShowCancelled((v) => !v)}
-            className="border-white/10 bg-transparent"
+            className="border-white/10 bg-transparent text-foreground hover:bg-white/5 hover:text-foreground"
           >
             {showCancelled ? "Hide" : "Show"} cancelled ({cancelledRows.length})
           </Button>
@@ -320,7 +320,7 @@ function QueuePage() {
                         value={cancelReason}
                         onChange={(e) => setCancelReason(e.target.value)}
                         placeholder="Cancellation reason"
-                        className="w-full min-h-20 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                        className="w-full min-h-20 rounded-lg border border-input bg-input px-3 py-2 text-sm text-popover-foreground placeholder:text-muted-foreground/70"
                       />
                       <Button size="sm" variant="outline" onClick={cancelSelected}>
                         <X className="h-4 w-4 mr-1" /> Cancel booking

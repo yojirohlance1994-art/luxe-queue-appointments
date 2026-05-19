@@ -52,7 +52,7 @@ function Overview() {
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-primary mb-2">Dashboard</p>
           <h1 className="font-display text-4xl lg:text-5xl font-bold">Overview</h1>
-          <p className="text-muted-foreground mt-1">Snapshot of the salon today.</p>
+          <p className="text-foreground/70 mt-1">Snapshot of the salon today.</p>
         </div>
         <Link to="/admin/queue">
           <Button className="bg-gradient-primary text-primary-foreground shadow-glow rounded-full px-6">
@@ -86,7 +86,7 @@ function Overview() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-foreground truncate">{r.clients?.full_name ?? "Unknown"}</div>
-                  <div className="text-xs text-muted-foreground truncate">
+                  <div className="text-xs text-foreground/70 truncate">
                     {r.services?.name ?? "—"} · {new Date(r.preferred_at).toLocaleString()}
                   </div>
                 </div>
