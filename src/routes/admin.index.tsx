@@ -19,6 +19,13 @@ type RecentRow = {
   services: { name: string; category: string } | null;
 };
 
+const formatWhen = (value: string) =>
+  new Date(value).toLocaleString([], {
+    dateStyle: "medium",
+    timeStyle: "short",
+    hour12: true,
+  });
+
 function Overview() {
   const [stats, setStats] = useState<Stat>({ pending: 0, accepted: 0, in_service: 0, completed_today: 0, staff: 0 });
   const [recent, setRecent] = useState<RecentRow[]>([]);

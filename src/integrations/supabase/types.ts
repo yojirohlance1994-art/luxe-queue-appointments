@@ -40,6 +40,67 @@ export type Database = {
           },
         ];
       };
+      appointment_services: {
+        Row: {
+          appointment_id: string;
+          created_at: string;
+          duration_minutes: number;
+          ends_at: string;
+          id: string;
+          price: number;
+          service_id: string;
+          sort_order: number;
+          staff_id: string;
+          starts_at: string;
+        };
+        Insert: {
+          appointment_id: string;
+          created_at?: string;
+          duration_minutes: number;
+          ends_at: string;
+          id?: string;
+          price?: number;
+          service_id: string;
+          sort_order?: number;
+          staff_id: string;
+          starts_at: string;
+        };
+        Update: {
+          appointment_id?: string;
+          created_at?: string;
+          duration_minutes?: number;
+          ends_at?: string;
+          id?: string;
+          price?: number;
+          service_id?: string;
+          sort_order?: number;
+          staff_id?: string;
+          starts_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointment_services_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointment_services_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointment_services_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       appointments: {
         Row: {
           booking_reference: string;
@@ -517,6 +578,35 @@ export type Database = {
           work_days?: Json;
         };
         Relationships: [];
+      };
+      staff_service_categories: {
+        Row: {
+          category: Database["public"]["Enums"]["service_category"];
+          created_at: string;
+          id: string;
+          staff_id: string;
+        };
+        Insert: {
+          category: Database["public"]["Enums"]["service_category"];
+          created_at?: string;
+          id?: string;
+          staff_id: string;
+        };
+        Update: {
+          category?: Database["public"]["Enums"]["service_category"];
+          created_at?: string;
+          id?: string;
+          staff_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "staff_service_categories_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       staff_unavailability: {
         Row: {

@@ -35,6 +35,12 @@ type Row = {
   queue_seq: number;
   clients: { full_name: string; contact_number: string; email: string | null } | null;
   services: { name: string; category: string } | null;
+  appointment_services: {
+    starts_at: string;
+    ends_at: string;
+    services: { name: string; category: string } | null;
+    staff: { full_name: string } | null;
+  }[];
 };
 
 const COLUMNS = [
@@ -58,7 +64,7 @@ function QueuePage() {
     const { data, error } = await supabase
       .from("appointments")
       .select(
-        "id, booking_reference, preferred_at, created_at, status, notes, concern, cancellation_reason, cancelled_at, cancelled_by, queue_seq, clients(full_name, contact_number, email), services(name, category)",
+        "id, booking_reference, preferred_at, created_at, status, notes, concern, cancellation_reason, cancelled_at, cancelled_by, queue_seq, clients(full_name, contact_number, email), services(name, category), appointment_services(starts_at, ends_at, services(name, category), staff(full_name))",
       )
       .or(
         `status.in.(pending,queued,accepted,in_service,in_progress),and(status.eq.completed,updated_at.gte.${since.toISOString()}),and(status.in.(cancelled,declined),updated_at.gte.${since.toISOString()})`,
@@ -105,6 +111,16 @@ function QueuePage() {
 
   const grouped = (cols: readonly string[]) => rows.filter((r) => cols.includes(r.status));
   const cancelledRows = rows.filter((r) => r.status === "cancelled" || r.status === "declined");
+  const formatWhen = (value: string) =>
+    new Date(value).toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short",
+      hour12: true,
+    });
+  const serviceSummary = (row: Row) =>
+    row.appointment_services?.length
+      ? row.appointment_services.map((line) => line.services?.name).filter(Boolean).join(", ")
+      : row.services?.name;
 
   return (
     <div className="p-6 lg:p-10 space-y-6 animate-float-in">
@@ -168,7 +184,7 @@ function QueuePage() {
                       <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-smooth shrink-0" />
                     </div>
                     <div className="text-xs text-card-foreground/70 truncate">
-                      {r.services?.name}
+                      {serviceSummary(r)}
                     </div>
                     {r.booking_reference && (
                       <div className="text-[11px] text-card-foreground/60 mt-1">
@@ -177,10 +193,7 @@ function QueuePage() {
                     )}
                     <div className="text-[11px] text-foreground/70 mt-2 flex items-center gap-1.5">
                       <Clock className="h-3 w-3" />{" "}
-                      {new Date(r.preferred_at).toLocaleString([], {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                      {formatWhen(r.preferred_at)}
                     </div>
                     <div className="mt-3 flex items-center justify-between">
                       <span className="text-[10px] uppercase tracking-wider text-primary font-bold">
@@ -208,7 +221,7 @@ function QueuePage() {
                   <div className="flex-1">
                     <div className="font-medium">{r.clients?.full_name}</div>
                     <div className="text-xs text-foreground/70">
-                      {r.services?.name} · {new Date(r.preferred_at).toLocaleString()}
+                      {serviceSummary(r)} · {formatWhen(r.preferred_at)}
                     </div>
                     {r.cancellation_reason && (
                       <div className="text-xs text-foreground/60">
@@ -244,7 +257,7 @@ function QueuePage() {
               </div>
               <div className="p-6 space-y-4">
                 <DetailRow icon={Clock} label="Requested">
-                  {new Date(selected.preferred_at).toLocaleString()}
+                  {formatWhen(selected.preferred_at)}
                 </DetailRow>
                 <DetailRow icon={Phone} label="Contact">
                   {selected.clients?.contact_number}
@@ -253,7 +266,7 @@ function QueuePage() {
                   )}
                 </DetailRow>
                 <DetailRow icon={FileText} label="Service">
-                  {selected.services?.name}{" "}
+                  {serviceSummary(selected)}{" "}
                   <span className="text-xs opacity-70">· {selected.services?.category}</span>
                 </DetailRow>
                 {selected.booking_reference && (

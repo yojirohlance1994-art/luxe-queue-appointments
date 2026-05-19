@@ -33,6 +33,7 @@ type Staff = {
   sort_order: number;
   schedule_notes: string | null;
   work_days: string[];
+  categories: Staff["category"][];
 };
 
 type Unavailable = {
@@ -40,6 +41,11 @@ type Unavailable = {
   staff_id: string;
   unavailable_date: string;
   reason: string | null;
+};
+
+type StaffCategory = {
+  staff_id: string;
+  category: Staff["category"];
 };
 
 const CATS: Staff["category"][] = ["hair", "nails", "lashes", "waxing", "beauty", "body"];
@@ -64,6 +70,7 @@ const empty: Partial<Staff> = {
   active: true,
   schedule_notes: "",
   work_days: DAYS.map((d) => d.id),
+  categories: ["hair"],
 };
 
 function StaffPage() {
@@ -75,12 +82,28 @@ function StaffPage() {
   const [offDay, setOffDay] = useState({ date: "", reason: "" });
 
   const load = useCallback(async () => {
-    const { data, error } = await supabase.from("staff").select("*").order("sort_order");
-    if (error) return toast.error(error.message);
+    const [staffRes, categoryRes] = await Promise.all([
+      supabase.from("staff").select("*").order("sort_order"),
+      supabase.from("staff_service_categories").select("staff_id, category"),
+    ]);
+    if (staffRes.error) return toast.error(staffRes.error.message);
+    if (categoryRes.error) return toast.error(categoryRes.error.message);
+
+    const categoriesByStaff = ((categoryRes.data as StaffCategory[]) ?? []).reduce(
+      (map, item) => {
+        const categories = map.get(item.staff_id) ?? [];
+        categories.push(item.category);
+        map.set(item.staff_id, categories);
+        return map;
+      },
+      new Map<string, Staff["category"][]>(),
+    );
+
     setList(
-      ((data as Staff[]) ?? []).map((s) => ({
+      ((staffRes.data as Staff[]) ?? []).map((s) => ({
         ...s,
         work_days: Array.isArray(s.work_days) ? s.work_days : DAYS.map((d) => d.id),
+        categories: categoriesByStaff.get(s.id) ?? [s.category],
       })),
     );
   }, []);
@@ -91,21 +114,42 @@ function StaffPage() {
 
   const save = async () => {
     if (!editing?.full_name) return toast.error("Name is required");
+    const categories = editing.categories?.length
+      ? editing.categories
+      : [editing.category || "hair"];
     const payload = {
       full_name: editing.full_name,
       role: editing.role || "Stylist",
       seniority: editing.seniority || "Junior",
       bio: editing.bio || null,
-      category: editing.category || "hair",
+      category: categories[0],
       image_url: editing.image_url || null,
       active: editing.active ?? true,
       schedule_notes: editing.schedule_notes || null,
       work_days: editing.work_days ?? DAYS.map((d) => d.id),
     };
-    const { error } = editing.id
-      ? await supabase.from("staff").update(payload).eq("id", editing.id)
-      : await supabase.from("staff").insert(payload);
+    const { data, error } = editing.id
+      ? await supabase.from("staff").update(payload).eq("id", editing.id).select("id").single()
+      : await supabase.from("staff").insert(payload).select("id").single();
     if (error) return toast.error(error.message);
+
+    const staffId = editing.id || data?.id;
+    if (staffId) {
+      const { error: deleteError } = await supabase
+        .from("staff_service_categories")
+        .delete()
+        .eq("staff_id", staffId);
+      if (deleteError) return toast.error(deleteError.message);
+
+      const { error: categoryError } = await supabase.from("staff_service_categories").insert(
+        categories.map((category) => ({
+          staff_id: staffId,
+          category,
+        })),
+      );
+      if (categoryError) return toast.error(categoryError.message);
+    }
+
     toast.success(editing.id ? "Staff updated" : "Staff added");
     setEditing(null);
     load();
@@ -152,6 +196,23 @@ function StaffPage() {
     });
   };
 
+  const toggleCategory = (category: Staff["category"]) => {
+    const current = editing?.categories?.length
+      ? editing.categories
+      : editing?.category
+        ? [editing.category]
+        : [];
+    const next = current.includes(category)
+      ? current.filter((item) => item !== category)
+      : [...current, category];
+    const safeNext = next.length > 0 ? next : [category];
+    setEditing({
+      ...editing,
+      categories: safeNext,
+      category: safeNext[0],
+    });
+  };
+
   const remove = async (id: string) => {
     if (!confirm("Remove this staff member?")) return;
     const { error } = await supabase.from("staff").delete().eq("id", id);
@@ -176,7 +237,8 @@ function StaffPage() {
     setUploading(false);
   };
 
-  const visible = filter === "all" ? list : list.filter((s) => s.category === filter);
+  const visible =
+    filter === "all" ? list : list.filter((s) => (s.categories ?? [s.category]).includes(filter));
 
   return (
     <div className="p-6 lg:p-10 space-y-6 animate-float-in">
@@ -228,7 +290,7 @@ function StaffPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0" />
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <div className="text-[10px] uppercase tracking-widest text-primary-foreground/80">
-                  {s.category} · {s.seniority}
+                  {(s.categories ?? [s.category]).join(", ")} · {s.seniority}
                 </div>
                 <div className="font-display text-lg font-semibold text-white">{s.full_name}</div>
                 <div className="text-xs text-white/80">{s.role}</div>
@@ -325,24 +387,27 @@ function StaffPage() {
                   </div>
                 </div>
                 <div>
-                  <Label>Category / Specialty</Label>
-                  <Select
-                    value={editing.category ?? "hair"}
-                    onValueChange={(v) =>
-                      setEditing({ ...editing, category: v as Staff["category"] })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATS.map((x) => (
-                        <SelectItem key={x} value={x}>
-                          {x}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Service Categories</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                    {CATS.map((category) => {
+                      const selected = (editing.categories?.length
+                        ? editing.categories
+                        : editing.category
+                          ? [editing.category]
+                          : []
+                      ).includes(category);
+                      return (
+                        <button
+                          key={category}
+                          type="button"
+                          onClick={() => toggleCategory(category)}
+                          className={`rounded-lg border px-2 py-2 text-xs font-semibold capitalize ${selected ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+                        >
+                          {category}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div>
                   <Label>Biography / History</Label>

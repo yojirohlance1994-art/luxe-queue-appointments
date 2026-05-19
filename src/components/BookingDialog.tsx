@@ -18,6 +18,15 @@ const TIME_SLOTS = [
   "13:00", "14:00", "15:00", "16:00", "17:00", "18:00",
 ];
 
+const formatTimeLabel = (time: string) => {
+  const [hour, minute] = time.split(":").map(Number);
+  return new Date(2000, 0, 1, hour, minute).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
 const createUuid = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -221,7 +230,7 @@ export function BookingDialog({
                 <SelectTrigger className="bg-white/15 border-white/20 text-card-foreground"><SelectValue placeholder="Select a time" /></SelectTrigger>
                 <SelectContent>
                   {TIME_SLOTS.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}>{formatTimeLabel(t)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

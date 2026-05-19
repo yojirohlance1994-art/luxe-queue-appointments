@@ -93,6 +93,33 @@ type ServicePackage = {
   duration_minutes: number;
 };
 
+type StaffMember = {
+  id: string;
+  full_name: string;
+  role: string;
+  category: Service["category"];
+  active: boolean;
+  work_days: string[];
+  categories: Service["category"][];
+};
+
+type StaffCategory = {
+  staff_id: string;
+  category: Service["category"];
+};
+
+type StaffUnavailable = {
+  staff_id: string;
+  unavailable_date: string;
+};
+
+type AppointmentServiceLine = {
+  staff_id: string;
+  starts_at: string;
+  ends_at: string;
+  appointments: { status: string } | null;
+};
+
 const CATEGORY_META = {
   hair: { label: "Hair", description: "Cuts, styling, color and treatments." },
   nails: { label: "Nails", description: "Manicures, pedicures and nail care." },
@@ -121,6 +148,33 @@ const createUuid = () => {
 const createBookingReference = () =>
   `QM-${createUuid().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
 
+const formatTimeLabel = (time: string) => {
+  const [hour, minute] = time.split(":").map(Number);
+  return new Date(2000, 0, 1, hour, minute).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const formatDateTime = (value: string) =>
+  new Date(value).toLocaleString([], {
+    dateStyle: "medium",
+    timeStyle: "short",
+    hour12: true,
+  });
+
+const toDayId = (date: string) =>
+  ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][
+    new Date(`${date}T00:00:00`).getDay()
+  ];
+
+const addMinutes = (date: Date, minutes: number) =>
+  new Date(date.getTime() + minutes * 60 * 1000);
+
+const rangesOverlap = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
+  aStart < bEnd && bStart < aEnd;
+
 const isHairColorService = (name: string) =>
   /color|tone|regrowth|highlight|bleach|ombre|balayage/i.test(name);
 
@@ -131,8 +185,12 @@ function BookingPage() {
   // FORM STATE
   const [services, setServices] = useState<Service[]>([]);
   const [packages, setPackages] = useState<ServicePackage[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staffUnavailable, setStaffUnavailable] = useState<StaffUnavailable[]>([]);
+  const [bookedLines, setBookedLines] = useState<AppointmentServiceLine[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
+  const [serviceStaff, setServiceStaff] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     full_name: "",
     contact_number: "",
@@ -200,6 +258,39 @@ function BookingPage() {
         );
       }
     });
+
+    Promise.all([
+      supabase
+        .from("staff")
+        .select("id, full_name, role, category, active, work_days")
+        .eq("active", true)
+        .order("sort_order"),
+      supabase.from("staff_service_categories").select("staff_id, category"),
+      supabase.from("staff_unavailability").select("staff_id, unavailable_date"),
+      supabase
+        .from("appointment_services")
+        .select("staff_id, starts_at, ends_at, appointments(status)"),
+    ]).then(([staffRes, categoryRes, unavailableRes, bookedRes]) => {
+      const categoriesByStaff = ((categoryRes.data as StaffCategory[]) ?? []).reduce(
+        (map, item) => {
+          const categories = map.get(item.staff_id) ?? [];
+          categories.push(item.category);
+          map.set(item.staff_id, categories);
+          return map;
+        },
+        new Map<string, Service["category"][]>(),
+      );
+
+      setStaff(
+        ((staffRes.data as StaffMember[]) ?? []).map((member) => ({
+          ...member,
+          work_days: Array.isArray(member.work_days) ? member.work_days : [],
+          categories: categoriesByStaff.get(member.id) ?? [member.category],
+        })),
+      );
+      setStaffUnavailable((unavailableRes.data as StaffUnavailable[]) ?? []);
+      setBookedLines((bookedRes.data as unknown as AppointmentServiceLine[]) ?? []);
+    });
   }, []);
 
   // CALCULATIONS
@@ -221,6 +312,34 @@ function BookingPage() {
     });
     return serviceIds;
   }, [selectedPackageServiceIds, selectedServices]);
+
+  const selectedServiceSchedule = useMemo(() => {
+    if (!form.date || !form.time) return new Map<string, { startsAt: Date; endsAt: Date }>();
+
+    let cursor = new Date(`${form.date}T${form.time}:00`);
+    const schedule = new Map<string, { startsAt: Date; endsAt: Date }>();
+
+    allSelectedServiceIds.forEach((serviceId) => {
+      const service = services.find((item) => item.id === serviceId);
+      if (!service) return;
+      const startsAt = cursor;
+      const endsAt = addMinutes(startsAt, service.duration_minutes);
+      schedule.set(serviceId, { startsAt, endsAt });
+      cursor = endsAt;
+    });
+
+    return schedule;
+  }, [allSelectedServiceIds, form.date, form.time, services]);
+
+  useEffect(() => {
+    setServiceStaff((current) => {
+      const next: Record<string, string> = {};
+      allSelectedServiceIds.forEach((serviceId) => {
+        if (current[serviceId]) next[serviceId] = current[serviceId];
+      });
+      return next;
+    });
+  }, [allSelectedServiceIds]);
 
   function effectivePackage(pkg: ServicePackage) {
     const serviceIds = pkg.service_ids?.length ? pkg.service_ids : [pkg.service_id];
@@ -288,6 +407,40 @@ function BookingPage() {
     setSelectedServices((prev) => prev.filter((id) => id !== serviceId));
   };
 
+  const staffOptionsForService = (service: Service) => {
+    const schedule = selectedServiceSchedule.get(service.id);
+    const day = form.date ? toDayId(form.date) : "";
+
+    return staff.filter((member) => {
+      if (!member.active || !member.categories.includes(service.category)) return false;
+      if (form.date && !member.work_days.includes(day)) return false;
+      if (
+        form.date &&
+        staffUnavailable.some(
+          (item) => item.staff_id === member.id && item.unavailable_date === form.date,
+        )
+      ) {
+        return false;
+      }
+
+      if (!schedule) return true;
+
+      return !bookedLines.some((line) => {
+        const status = line.appointments?.status;
+        if (line.staff_id !== member.id) return false;
+        if (status === "cancelled" || status === "declined" || status === "completed") {
+          return false;
+        }
+        return rangesOverlap(
+          schedule.startsAt,
+          schedule.endsAt,
+          new Date(line.starts_at),
+          new Date(line.ends_at),
+        );
+      });
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -306,6 +459,23 @@ function BookingPage() {
       .map((id) => services.find((s) => s.id === id))
       .filter((s): s is Service => Boolean(s));
 
+    const missingStaff = pickedServices.some((service) => !serviceStaff[service.id]);
+    const unavailableStaff = pickedServices.some(
+      (service) =>
+        serviceStaff[service.id] &&
+        !staffOptionsForService(service).some((member) => member.id === serviceStaff[service.id]),
+    );
+
+    if (missingStaff) {
+      toast.error("Please choose a staff member for each selected service.");
+      return;
+    }
+
+    if (unavailableStaff) {
+      toast.error("One of the selected staff members is no longer available for that slot.");
+      return;
+    }
+
     if (
       pickedServices.some((s) => isHairColorService(s.name)) &&
       pickedServices.some((s) => isRebondingService(s.name))
@@ -320,6 +490,7 @@ function BookingPage() {
 
     try {
       const clientId = createUuid();
+      const bookingId = createUuid();
       const bookingReference = createBookingReference();
 
       // Create client without needing the returned row to satisfy RLS
@@ -337,8 +508,8 @@ function BookingPage() {
       // Create appointment with all services
       const preferred_at = new Date(`${form.date}T${form.time}:00`).toISOString();
 
-      // For multi-service support, we'll create one appointment with all services
-      // (You may want to extend the appointments table to store multiple service_ids as JSON)
+      // Keep the legacy primary service fields populated while the detailed
+      // per-service assignments live in appointment_services.
       const primaryServiceId = selectedServices[0] || selectedPackageServiceIds[0];
       const selectedServiceNames = allSelectedServiceIds.map(
         (id) => services.find((s) => s.id === id)?.name || id,
@@ -348,6 +519,7 @@ function BookingPage() {
         .filter(Boolean);
 
       const { error: aErr } = await supabase.from("appointments").insert({
+        id: bookingId,
         booking_reference: bookingReference,
         client_id: clientId,
         service_id: primaryServiceId,
@@ -369,6 +541,24 @@ function BookingPage() {
 
       if (aErr) throw aErr;
 
+      const serviceLines = pickedServices.map((service, index) => {
+        const schedule = selectedServiceSchedule.get(service.id);
+        if (!schedule) throw new Error("Missing service schedule.");
+        return {
+          appointment_id: bookingId,
+          service_id: service.id,
+          staff_id: serviceStaff[service.id],
+          starts_at: schedule.startsAt.toISOString(),
+          ends_at: schedule.endsAt.toISOString(),
+          duration_minutes: service.duration_minutes,
+          price: service.price,
+          sort_order: index,
+        };
+      });
+
+      const { error: lineErr } = await supabase.from("appointment_services").insert(serviceLines);
+      if (lineErr) throw lineErr;
+
       toast.success("Booking confirmed!", {
         description: `Reference: ${bookingReference}. Keep this for reviews or concerns.`,
       });
@@ -376,6 +566,7 @@ function BookingPage() {
       // Reset form
       setSelectedServices([]);
       setSelectedPackages([]);
+      setServiceStaff({});
       setForm({ full_name: "", contact_number: "", email: "", date: "", time: "", notes: "" });
     } catch (err) {
       console.error("Booking error:", err);
@@ -586,6 +777,22 @@ function BookingPage() {
                             <div className="text-xs text-foreground/50">
                               {service.duration_minutes} min
                             </div>
+                            {selectedServiceSchedule.has(serviceId) && (
+                              <div className="text-xs text-foreground/50">
+                                {formatDateTime(
+                                  selectedServiceSchedule
+                                    .get(serviceId)!
+                                    .startsAt.toISOString(),
+                                )}
+                              </div>
+                            )}
+                            {serviceStaff[serviceId] && (
+                              <div className="text-xs text-primary/80">
+                                with{" "}
+                                {staff.find((member) => member.id === serviceStaff[serviceId])
+                                  ?.full_name ?? "selected staff"}
+                              </div>
+                            )}
                             {!isSelectedDirectly && (
                               <div className="text-xs text-primary/70">(from package)</div>
                             )}
@@ -728,12 +935,74 @@ function BookingPage() {
                       <SelectContent>
                         {TIME_SLOTS.map((slot) => (
                           <SelectItem key={slot} value={slot}>
-                            {slot}
+                            {formatTimeLabel(slot)}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Staff */}
+                  {allSelectedServiceIds.length > 0 && (
+                    <div className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                      <div>
+                        <Label className="text-foreground">Staff per service *</Label>
+                        <p className="text-xs text-foreground/60">
+                          Choose who will handle each selected service.
+                        </p>
+                      </div>
+                      {!form.date || !form.time ? (
+                        <p className="text-xs text-foreground/60">
+                          Pick a date and time first to check availability.
+                        </p>
+                      ) : (
+                        allSelectedServiceIds.map((serviceId) => {
+                          const service = services.find((item) => item.id === serviceId);
+                          if (!service) return null;
+                          const options = staffOptionsForService(service);
+                          const schedule = selectedServiceSchedule.get(serviceId);
+                          return (
+                            <div key={serviceId} className="space-y-1">
+                              <Label className="text-xs text-foreground/80">
+                                {service.name}
+                                {schedule
+                                  ? ` - ${formatTimeLabel(
+                                      schedule.startsAt.toTimeString().slice(0, 5),
+                                    )}`
+                                  : ""}
+                              </Label>
+                              <Select
+                                value={serviceStaff[serviceId] ?? ""}
+                                onValueChange={(value) =>
+                                  setServiceStaff((current) => ({
+                                    ...current,
+                                    [serviceId]: value,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="bg-white/15 border-white/20 text-foreground">
+                                  <SelectValue placeholder="Select staff" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {options.length === 0 ? (
+                                    <SelectItem value="none" disabled>
+                                      No staff available
+                                    </SelectItem>
+                                  ) : (
+                                    options.map((member) => (
+                                      <SelectItem key={member.id} value={member.id}>
+                                        {member.full_name} - {member.role}
+                                      </SelectItem>
+                                    ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
 
                   {/* Notes */}
                   <div>
